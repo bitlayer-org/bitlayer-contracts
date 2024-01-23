@@ -264,7 +264,19 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
             } else {
                 activeRewards += backupRewards;
             }
-            left = distributeFeeToVals(left, activeRewards, activeTotalStakes, activeValidators);
+
+            // On the chain launch stage, the initial validators have no stakes
+            if (activeTotalStakes == 0) {
+                uint cnt = activeValidators.length;
+                uint reward = (activeRewards / cnt) / COEFFICIENT;
+                for (uint i = 0; i < cnt; i++) {
+                    IValidator val = valMaps[activeValidators[i]];
+                    val.receiveFee{value: reward}();
+                }
+                left -= reward * cnt;
+            } else {
+                left = distributeFeeToVals(left, activeRewards, activeTotalStakes, activeValidators);
+            }
 
             // the left should be around 20%
             sendValue(foundationPool, left);
