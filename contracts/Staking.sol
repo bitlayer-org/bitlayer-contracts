@@ -378,7 +378,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         IValidator val = valMaps[_val];
         // the slash amount will calculate from unWithdrawn stakes,
         // and then slash immediately, and first try subtracting the slash amount from staking record.
-        // If there's no enough stakeGWei, it means some of the slash amount will come from the pending unbound staking.
+        // If there's no enough stake, it means some of the slash amount will come from the pending unbound staking.
         ValidatorInfo storage vInfo = valInfos[_val];
         uint slashAmount = (vInfo.unWithdrawn * _factor) / PunishBase;
         uint amountFromCurrStakes = slashAmount;

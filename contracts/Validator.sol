@@ -34,7 +34,7 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
     struct UnboundRecord {
         uint count; // total pending unbound number;
         uint startIdx; // start index of the first pending record. unless the count is zero, otherwise the startIdx will only just increase.
-        uint pendingAmount; // total pending stakes, gwei
+        uint pendingAmount; // total pending stakes
         mapping(uint => PendingUnbound) pending;
     }
 
@@ -52,8 +52,6 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
     uint256 private accRewardsPerStake; // accumulative rewards per stake
     uint256 private selfSettledRewards;
     uint256 private selfDebt; // debt for the calculation of inner staking rewards
-
-    uint256 public currFeeRewards;
 
     uint256 public exitLockEnd;
 
@@ -326,7 +324,14 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
         if (dlg.stake > 0 || pendingAmount > 0) {
             // total stake
             uint totalDelegation = dlg.stake + pendingAmount;
-            amount = (totalDelegation * deltaFactor) / PunishBase;
+            // A rare case: the validator was punished multiple times,
+            // but during this period the delegator did not perform any operations,
+            // and then the deltaFactor exceeded the PunishBase.
+            if (deltaFactor >= PunishBase) {
+                amount = totalDelegation;
+            } else {
+                amount = (totalDelegation * deltaFactor) / PunishBase;
+            }
         }
         return amount;
     }
@@ -446,7 +451,7 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
         }
         // 3. Jail => Idle, Noop; Jail => Ready, Up.
         if (state == State.Jail) {
-            // We also need to check whether the selfStakeGWei is less than MinSelfStakes or not.
+            // We also need to check whether the selfStake is less than MinSelfStakes or not.
             // It may happen due to stakes slashing.
             if (totalStake < ThresholdStakes || selfStake < MinSelfStakes) {
                 emit StateChanged(validator, _changer, state, State.Idle);

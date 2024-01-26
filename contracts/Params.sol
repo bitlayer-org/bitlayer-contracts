@@ -13,8 +13,8 @@ contract Params {
     uint8 public constant MaxBackups = 79;
 
     uint public constant MaxStakes = 24_000_000 ether; //  max total stakes for a validator
-    // gwei; min total stakes for a validator to be a valid candidate.
-    // Note20220412: set it to MinSelfStakes so we can disable this requirement without changing the code.
+    // min total stakes for a validator to be a valid candidate.
+    // Note: set it to MinSelfStakes so we can disable this requirement without changing the code.
     uint public constant ThresholdStakes = 50_000 ether;
     uint public constant MinSelfStakes = 50_000 ether; // min self stakes for a user to register a validator
     uint public constant StakeUnit = 1; // ether

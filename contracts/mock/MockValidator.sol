@@ -9,8 +9,8 @@ contract Validator is WithAdmin, IValidator {
     address public owner; // It must be the Staking contract address. For convenient.
     address public override validator; // the address that represents a validator and will be used to take part in the consensus.
     uint256 public commissionRate; // base 100
-    uint256 public selfStakeGWei; // self stake, in GWei
-    uint256 public override totalStake; // total stakes in GWei, = selfStake + allOtherDelegation
+    uint256 public selfStake; // self stake
+    uint256 public override totalStake; // total stakes, = selfStake + allOtherDelegation
     bool public acceptDelegation; // Does this validator accepts delegation
     State public override state;
     uint256 public totalUnWithdrawn;
@@ -39,7 +39,7 @@ contract Validator is WithAdmin, IValidator {
         validator = _validator;
         admin = _manager;
         commissionRate = _rate;
-        selfStakeGWei = _stake;
+        selfStake = _stake;
         totalStake = _stake;
         totalUnWithdrawn = _stake;
         acceptDelegation = _acceptDlg;
