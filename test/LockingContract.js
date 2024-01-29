@@ -5,9 +5,9 @@
 // Runtime Environment's members available in the global scope.
 const {expect, use} = require("chai");
 const exp = require("constants");
-const {BigNumber} = require("ethers");
+const {ethers,BigNumber} = require("ethers");
 const hre = require("hardhat");
-const ethers = hre.ethers;
+//const ethers = hre.ethers;
 const utils = require("./utils");
 
 describe("LockingContract contract test", function () {
@@ -20,32 +20,43 @@ describe("LockingContract contract test", function () {
     let account4;
     let account5;
 
-    let  = ethers.parseEther('1000',18);
     let periodTime = 50;
     let BLT;
     let blt;
     let cliffPeriods = 12;
     let vestingPeriods = 30;
-    let StakingToken;
+    let LockingContract;
+    let LockingToken;
     let lockingContract;
-    before(async function () {
+    beforeEach(async function () {
 
         [owner, account1, account2, account3, account4, account5] = await hre.ethers.getSigners();
         BLT = await hre.ethers.getContractFactory("BLT");
         blt = await BLT.deploy(
-            [owner.address],
+            [account5.address],
             [ethers.parseUnits("1000000000",18)]
         );
         console.log("BLT: ",blt.target);
 
-        StakingToken = blt.target;
+        LockingToken = blt.target;
 
-        LockingContract = await hre.ethers.getContractFactory("LockingContract");
+        LockingContract = await hre.ethers.getContractFactory("LockingContract")
+        const nonce = await owner.getNonce();
+        console.log("nonce:",nonce);
+        const from = owner.address.toString();
+        contractAddress = ethers.getCreateAddress({from,nonce});
 
+        console.log("PreCalcu LockingContract:",contractAddress);
+ 
+
+      
+        await blt.connect(account5).transfer(contractAddress, utils.ethToWei('1200000'));
         // await blt.transfer(lockingContract.target, utils.ethToWei('40000000'))
     })
 
     it('should contract constuct success', async function () {
+        console.log(await utils.getLatestBlockNumber());
+
         lockingContract = await LockingContract.deploy(
             [
                 owner.address,
@@ -59,31 +70,79 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
+
+        console.log(await utils.getLatestBlockNumber());
+        //await network.provider.send("evm_setAutomine", [true]);
         console.log("LockingContract:: ",lockingContract.target);
         // failed to with 0
-        expect(await lockingContract.cliffPeriods()).to.be.eq(cliffPeriods);
-
-        expect(await lockingContract.vestingPeriods()).to.be.eq(vestingPeriods);
 
         expect(await lockingContract.periodTime()).to.be.eq(periodTime);
 
-        expect(await lockingContract.StakingToken()).to.be.eq(StakingToken);
+        expect(await lockingContract.LockingToken()).to.be.eq(LockingToken);
 
         const vestingSchedule = await lockingContract.vestingSchedules(owner.address)
-        expect(vestingSchedule.totalStakingAmount).to.be.eq(utils.ethToWei('300000'));
+        
+        expect(vestingSchedule.lockingAmount).to.be.eq(utils.ethToWei('300000'));
 
         expect(vestingSchedule.releasedAmount).to.be.eq(0);
 
-        expect(vestingSchedule.isActive).to.be.eq(true);
-        
+        expect(vestingSchedule.cliffPeriod).to.be.eq(cliffPeriods);
 
+        expect(vestingSchedule.vestingPeriod).to.be.eq(vestingPeriods);
+
+        expect(vestingSchedule.isActive).to.be.eq(true);
+
+        
         const timestamp = await lockingContract.startTimestamp();
         console.log("tmp:",timestamp);
+
+        //expect(await lockingContract.totalLockingAmountSum()).to.be.eq(await blt.balanceOf(lockingContract.target));
+        //console.log(await lockingContract.totalLockingAmountSum());
+    });
+    it('should contract constuct fail', async function () {
+        expect(await LockingContract.deploy(
+            [
+                owner.address,
+                account1.address,
+                account2.address,
+                account3.address
+            ],
+            [
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000')
+            ],
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods
+            ],
+            periodTime,
+            LockingToken
+        )).to.be.rejectedWith("Balance Not Match");    
     });
     // --------------------- change new Beneficiary ----------------------
     it("should not change the Beneficiary when the oldBeneficiary not exist",async function(){
@@ -100,10 +159,20 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
         await expect(lockingContract.getVestingAmount(account5.address)).to.be.revertedWith("No active vesting schedule found");
@@ -124,10 +193,20 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
         expect(await lockingContract.getVestingAmount(account1.address)).to.be.eq(0);
@@ -148,13 +227,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime * 13])
         await utils.mineEmptyBlock();
         await lockingContract.connect(account1).changeBeneficiary(account4.address);
@@ -183,13 +272,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(0);
@@ -210,13 +309,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
         await expect(lockingContract.getVestingAmount(account5.address)).to.be.revertedWith("No active vesting schedule found");
@@ -237,13 +346,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(0);
@@ -264,13 +383,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime * 12])
         await utils.mineEmptyBlock();
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(0);
@@ -291,13 +420,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         console.log(await blt.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 13])
         await utils.mineEmptyBlock();
@@ -323,13 +462,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         console.log(await blt.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 42])
         await utils.mineEmptyBlock();
@@ -356,13 +505,23 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        // await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
         console.log(await blt.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 43])
         await utils.mineEmptyBlock();
@@ -389,13 +548,24 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000')
             ],
-            cliffPeriods,
-            vestingPeriods,
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
             periodTime,
-            StakingToken
+            LockingToken
         );
         console.log("LockingContract:: ",lockingContract.target);
-        await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        // await blt.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        console.log(await blt.balanceOf(contractAddress));
         console.log(await blt.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 43])
         await utils.mineEmptyBlock();
