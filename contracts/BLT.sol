@@ -2,6 +2,7 @@
 
 import "./interfaces/IERC20.sol";
 
+pragma solidity ^0.8.0;
 
 
 contract StandardToken is IERC20 {
@@ -62,5 +63,6 @@ contract BLT is StandardToken {
             require(tokenAmount <= totalSupply, "TotalSupply OverFlow");
             balances[accounts[i]] = amounts[i];
         }
+        require(totalSupply == tokenAmount, "TotalSupply is not Distributed");
     }    
 }

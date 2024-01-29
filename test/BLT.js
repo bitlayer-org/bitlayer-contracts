@@ -25,8 +25,7 @@ describe("BLT test", function(){
         BLT = await hre.ethers.getContractFactory("BLT")
     })
     it("less than totalsupply when construct",async function(){
-        const blt = await BLT.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18)]);
-        console.log(blt.target);
+        await expect(BLT.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18),ethers.parseUnits("100000000",18)])).to.be.revertedWith("TotalSupply is not Distributed");
     })
 
     it("more than totalsupply when construct",async function(){
