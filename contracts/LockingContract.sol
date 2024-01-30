@@ -61,13 +61,13 @@ contract LockingContract {
             );
             lockingAmountSum += lockingAmounts[i];
         }
-        // TODO this option cannot pass test,need to rewrite
-        // require(lockingAmountSum == IERC20(LockingToken).balanceOf(address(this)),"Locking Balance not Match");
-
+        
         periodTime = _periodTime;
         LockingToken = _lockingToken;
 
         startTimestamp = block.timestamp;
+
+        require(lockingAmountSum == IERC20(LockingToken).balanceOf(address(this)),"Locking Balance not Match");
 
     }
 
