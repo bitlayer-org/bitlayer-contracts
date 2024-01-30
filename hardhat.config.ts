@@ -28,6 +28,17 @@ const config: HardhatUserConfig = {
   solpp: {
     defs: contractDefs[process.env.NET]
   },
+  networks: {
+    hardhat: {
+      allowUnlimitedContractSize: true,
+      accounts: {
+        mnemonic: "test test test test test test test test test test test junk",
+        count: 100,
+        accountsBalance: "1000000000000000000000000000"
+      },
+      hardfork: "london"
+    }
+  }
 };
 
 export default config;
