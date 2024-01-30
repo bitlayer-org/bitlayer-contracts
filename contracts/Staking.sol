@@ -43,9 +43,9 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     uint256 public constant BackupValidatorFeePercent = 24; // 80% * 30%
     uint256 public constant ActiveValidatorFeePercent = 56; // 80% * 70%
 
-    // BLT token address.
+    // BRC token address.
     // Note: The decimals MUST BE 18, this Staking contract just take it 18 without validation.
-    IERC20 public bltToken;
+    IERC20 public brcToken;
 
     bool public isOpened; // true means any one can register to be a validator without permission. default: false
 
@@ -126,13 +126,13 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     // initialize the staking contract, mainly for the convenient purpose to init different chains
     function initialize(
         address _admin,
-        address _bltAddress,
+        address _brcAddress,
         uint256 _epoch,
         address payable _foundationPool
-    ) external initializer onlyValidAddress(_admin) onlyValidAddress(_bltAddress) {
+    ) external initializer onlyValidAddress(_admin) onlyValidAddress(_brcAddress) {
         require(_epoch > 0, "E10");
         admin = _admin;
-        bltToken = IERC20(_bltAddress);
+        brcToken = IERC20(_brcAddress);
         blockEpoch = _epoch;
         foundationPool = _foundationPool;
     }
@@ -440,11 +440,11 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     function takeStakedToken(address _tokenOwner, uint256 _amount) internal {
         if (_amount > 0) {
             mustConvertStake(_amount);
-            uint currAllowance = bltToken.allowance(_tokenOwner, address(this));
-            uint balance = bltToken.balanceOf(_tokenOwner);
+            uint currAllowance = brcToken.allowance(_tokenOwner, address(this));
+            uint balance = brcToken.balanceOf(_tokenOwner);
             require(currAllowance >= _amount, "E43"); //not enough allowance
             require(balance >= _amount, "E44"); //not enough balance
-            SafeERC20.safeTransferFrom(bltToken, _tokenOwner, address(this), _amount);
+            SafeERC20.safeTransferFrom(brcToken, _tokenOwner, address(this), _amount);
         }
     }
 
@@ -525,7 +525,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         doExit(_val, false);
     }
 
-    function doExit(address _val, bool byValidator) private {
+    function doExit(address _val, bool byValidator) private returns(uint256){
         IValidator val = valMaps[_val];
         RankingOp op = RankingOp.Noop;
         uint amount = 0;
@@ -535,6 +535,44 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
             (op, amount) = val.exitDelegation(msg.sender);
         }
         afterLessStake(_val, val, amount, op);
+        return amount;
+    }
+
+    /**
+     * @dev reStaking is used for a validator to move it's self stake.
+     * @param _oldVal, the validitor moved from.
+     * @param _newVal, the validitor moved to.
+    **/
+
+
+    function reStaking(address _oldVal, address _newVal) external onlyExistsAndByManager(_oldVal) 
+    onlyExists(_newVal)
+    {
+        doReStake(_oldVal,_newVal,true);
+    }
+
+    /**
+     * @dev reDelegation is used for a user to move it's self stake.
+     * @param _oldVal, the validitor moved from.
+     * @param _newVal, the validitor moved to.
+    **/
+    function reDelegation(address _oldVal, address _newVal) external 
+    onlyExists(_oldVal) 
+    onlyExists(_newVal)
+    {
+        doReStake(_oldVal,_newVal,false);
+    }
+
+
+    function doReStake(address _oldVal,address _newVal, bool byValidator) private {
+        uint amount = 0;
+        if (byValidator) {
+            amount = doExit(_oldVal,true);
+            addStakeOrDelegation(_newVal,msg.sender,amount,false);
+        } else {
+            amount = doExit(_oldVal,false);
+            addStakeOrDelegation(_newVal, msg.sender, amount, false);
+        }
     }
 
     // @dev validatorClaimAny claims any token that can be send to the manager of the specific validator.
@@ -564,7 +602,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         }
         if (releaseAmount > 0) {
             valInfos[_val].unWithdrawn -= releaseAmount;
-            SafeERC20.safeTransfer(bltToken, msg.sender, releaseAmount);
+            SafeERC20.safeTransfer(brcToken, msg.sender, releaseAmount);
             emit StakeWithdrawn(_val, msg.sender, releaseAmount);
         } else {
             emit ClaimWithoutUnboundStake(_val);

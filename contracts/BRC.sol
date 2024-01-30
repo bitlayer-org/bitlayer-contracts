@@ -46,10 +46,10 @@ contract StandardToken is IERC20 {
 }
 
 
-contract BLT is StandardToken {
+contract BRC is StandardToken {
 
-    string public constant name = "BLT Token";                             
-    string public constant symbol = "BLT"; 
+    string public constant name = "BRC Token";                             
+    string public constant symbol = "BRC"; 
     uint8 public constant decimals = 18; 
     constructor (
         address[] memory accounts,
