@@ -567,9 +567,11 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     function doReStake(address _oldVal,address _newVal, bool byValidator) private {
         uint amount = 0;
         if (byValidator) {
+            validatorClaimAny(_oldVal);
             amount = doExit(_oldVal,true);
             addStakeOrDelegation(_newVal,msg.sender,amount,false);
         } else {
+            delegatorClaimAny(_oldVal);
             amount = doExit(_oldVal,false);
             addStakeOrDelegation(_newVal, msg.sender, amount, false);
         }
