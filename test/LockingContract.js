@@ -114,8 +114,8 @@ describe("LockingContract contract test", function () {
         //expect(await lockingContract.totalLockingAmountSum()).to.be.eq(await blt.balanceOf(lockingContract.target));
         //console.log(await lockingContract.totalLockingAmountSum());
     });
-    it('should contract constuct fail', async function () {
-        expect(await LockingContract.deploy(
+    it('should contract constuct fail when totalLockingAmount less than balanceOf contract', async function () {
+        await expect(LockingContract.deploy(
             [
                 owner.address,
                 account1.address,
@@ -126,7 +126,7 @@ describe("LockingContract contract test", function () {
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000'),
                 utils.ethToWei('300000'),
-                utils.ethToWei('300000')
+                utils.ethToWei('200000')
             ],
             [
                 cliffPeriods,
@@ -142,7 +142,37 @@ describe("LockingContract contract test", function () {
             ],
             periodTime,
             LockingToken
-        )).to.be.rejectedWith("Balance Not Match");    
+        )).to.revertedWith("Locking Balance not Match");    
+    });
+    it('should contract constuct fail when totalLockingAmount more than balanceOf contract', async function () {
+        await expect(LockingContract.deploy(
+            [
+                owner.address,
+                account1.address,
+                account2.address,
+                account3.address
+            ],
+            [
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('400000')
+            ],
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods
+            ],
+            periodTime,
+            LockingToken
+        )).to.revertedWith("Locking Balance not Match");    
     });
     // --------------------- change new Beneficiary ----------------------
     it("should not change the Beneficiary when the oldBeneficiary not exist",async function(){
