@@ -16,6 +16,7 @@ interface IValidator {
 
     function subStake(uint256 _amount) external returns (RankingOp);
 
+    function subStakeWithUnbound(uint256 _amount) external returns (RankingOp);
     // @return RankingOp
     // @return amount of stakes need to be subtracted from total stakes.
     function exitStaking() external returns (RankingOp, uint256);
@@ -31,6 +32,8 @@ interface IValidator {
     function addDelegation(uint256 _amount, address _delegator) external returns (RankingOp);
 
     function subDelegation(uint256 _amount, address _delegator) external returns (RankingOp);
+
+    function subDelegationWithUnbound(uint256 _amount, address _delegator) external returns (RankingOp);
 
     function exitDelegation(address _delegator) external returns (RankingOp, uint256);
 

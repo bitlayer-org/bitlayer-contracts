@@ -124,6 +124,20 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
     }
 
     // @return an operation enum about the ranking
+    function subStakeWithUnbound(uint256 _amount) external override onlyOwner onlyCanDoStaking returns (RankingOp) {
+        // Break minSelfStakes limit, try exitStaking
+        require(selfStake >= _amount + MinSelfStakes, "E31");
+
+        //
+        selfSettledRewards += _amount * accRewardsPerStake;
+        selfStake -= _amount;
+        RankingOp op = subTotalStake(_amount, admin);
+
+        // pending unbound stake, use `validator` as the stakeOwner, because the manager can be changed.
+        // addUnboundRecord(validator, _amount);
+        return op;
+    }
+
     function subStake(uint256 _amount) external override onlyOwner onlyCanDoStaking returns (RankingOp) {
         // Break minSelfStakes limit, try exitStaking
         require(selfStake >= _amount + MinSelfStakes, "E31");
@@ -137,7 +151,6 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
         addUnboundRecord(validator, _amount);
         return op;
     }
-
     function exitStaking() external override onlyOwner returns (RankingOp, uint256) {
         // already on the exit state
         require(state != State.Exit, "E32");
@@ -230,6 +243,14 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
         return innerSubDelegation(_amount, _delegator);
     }
 
+    function subDelegationWithUnbound(
+        uint256 _amount,
+        address _delegator
+    ) external override onlyOwner onlyCanDoStaking returns (RankingOp) {
+        handleDelegatorPunishment(_delegator);
+        return innerSubDelegationWithUnbound(_amount, _delegator);
+    }
+
     function exitDelegation(address _delegator) external override onlyOwner onlyCanDoStaking returns (RankingOp, uint) {
         Delegation memory dlg = delegators[_delegator];
         // no delegation
@@ -257,6 +278,20 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
 
         return op;
     }
+    function innerSubDelegationWithUnbound(uint256 _amount, address _delegator) private returns (RankingOp) {
+        Delegation storage dlg = delegators[_delegator];
+        // no enough stake to subtract
+        require(dlg.stake >= _amount, "E24");
+
+        //
+        dlg.settled += _amount * accRewardsPerStake;
+        dlg.stake -= _amount;
+
+        RankingOp op = subTotalStake(_amount, _delegator);
+
+        return op;
+    }
+
 
     function delegatorClaimAny(
         address payable _delegator

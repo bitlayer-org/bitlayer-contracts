@@ -545,10 +545,10 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     **/
 
 
-    function reStaking(address _oldVal, address _newVal) external onlyExistsAndByManager(_oldVal) 
+    function reStaking(address _oldVal, address _newVal, uint256 _amount) external onlyExistsAndByManager(_oldVal) 
     onlyExists(_newVal)
     {
-        doReStake(_oldVal,_newVal,true);
+        doReStake(_oldVal, _newVal, _amount, true);
     }
 
     /**
@@ -556,24 +556,33 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
      * @param _oldVal, the validitor moved from.
      * @param _newVal, the validitor moved to.
     **/
-    function reDelegation(address _oldVal, address _newVal) external 
+    function reDelegation(address _oldVal, address _newVal,uint256 _amount) external 
     onlyExists(_oldVal) 
     onlyExists(_newVal)
     {
-        doReStake(_oldVal,_newVal,false);
+        doReStake(_oldVal,_newVal, _amount,false);
     }
 
 
-    function doReStake(address _oldVal,address _newVal, bool byValidator) private {
-        uint amount = 0;
+    function doReStake(address _oldVal,address _newVal,uint256 _amount,bool byValidator) private {
+        require(_amount > 0, "E23");
+        ValidatorInfo memory vInfo = valInfos[_oldVal];
+        // no enough stake to subtract
+        require(vInfo.stake >= _amount, "E24");
+
+        IValidator oldVal = valMaps[_oldVal];
+        RankingOp op = RankingOp.Noop;
+        
         if (byValidator) {
-            validatorClaimAny(_oldVal);
-            amount = doExit(_oldVal,true);
-            addStakeOrDelegation(_newVal,msg.sender,amount,false);
+            doClaimAny(_oldVal, true);
+            op = oldVal.subStakeWithUnbound(_amount);
+            afterLessStake(_oldVal, oldVal, _amount, op);
+            addStakeOrDelegation(_newVal, msg.sender, _amount, false);
         } else {
-            delegatorClaimAny(_oldVal);
-            amount = doExit(_oldVal,false);
-            addStakeOrDelegation(_newVal, msg.sender, amount, false);
+            doClaimAny(_oldVal,false);
+            op = oldVal.subDelegationWithUnbound(_amount,msg.sender);
+            afterLessStake(_oldVal, oldVal, _amount, op);
+            addStakeOrDelegation(_newVal, msg.sender, _amount, false);
         }
     }
 
