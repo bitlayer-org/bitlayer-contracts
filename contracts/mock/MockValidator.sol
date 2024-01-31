@@ -61,7 +61,11 @@ contract Validator is WithAdmin, IValidator {
     function subStake(uint256) external override onlyOwner returns (RankingOp) {
         return RankingOp.Noop;
     }
-
+    
+    function subStakeWithUnbound(uint256) external override onlyOwner returns (RankingOp) {
+        // Break minSelfStakes limit, try exitStaking
+        return RankingOp.Noop;
+    }
     function exitStaking() external override onlyOwner returns (RankingOp, uint256) {
         return (RankingOp.Noop, 0);
     }
@@ -77,6 +81,10 @@ contract Validator is WithAdmin, IValidator {
     }
 
     function subDelegation(uint256, address) external override onlyOwner returns (RankingOp) {
+        return RankingOp.Noop;
+    }
+
+    function subDelegationWithUnbound(uint256, address) external override onlyOwner returns (RankingOp) {
         return RankingOp.Noop;
     }
 
