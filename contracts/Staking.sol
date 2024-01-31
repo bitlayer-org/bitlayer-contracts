@@ -466,13 +466,13 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         addStakeOrDelegation(_val, msg.sender, _amount, false);
     }
 
-    function addStakeOrDelegation(address _val, address _tokenOwner, uint256 _amount, bool byValidator) private {
+    function addStakeOrDelegation(address _val, address _tokenOwner, uint256 _amount, bool _byValidator) private {
         require(_amount > 0, "E14");
         takeStakedToken(_tokenOwner, _amount);
 
         IValidator val = valMaps[_val];
         RankingOp op = RankingOp.Noop;
-        if (byValidator) {
+        if (_byValidator) {
             op = val.addStake(_amount);
         } else {
             op = val.addDelegation(_amount, _tokenOwner);
@@ -493,14 +493,14 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     // @dev subStake is used for a validator to subtract it's self stake.
     // @param _amount, the subtraction amount.
     function subStake(address _val, uint256 _amount) external onlyExistsAndByManager(_val) {
-        subStakeOrDelegation(_val, _amount, true);
+        subStakeOrDelegation(_val, _amount, true, true);
     }
 
     function subDelegation(address _val, uint256 _amount) external onlyExists(_val) {
-        subStakeOrDelegation(_val, _amount, false);
+        subStakeOrDelegation(_val, _amount, false, true);
     }
 
-    function subStakeOrDelegation(address _val, uint256 _amount, bool byValidator) private {
+    function subStakeOrDelegation(address _val, uint256 _amount, bool _byValidator, bool _isUnbound) private {
         // the input _amount should not be zero
         require(_amount > 0, "E23");
         ValidatorInfo memory vInfo = valInfos[_val];
@@ -509,10 +509,10 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
 
         IValidator val = valMaps[_val];
         RankingOp op = RankingOp.Noop;
-        if (byValidator) {
-            op = val.subStake(_amount);
+        if (_byValidator) {
+            op = val.subStake(_amount, _isUnbound);
         } else {
-            op = val.subDelegation(_amount, payable(msg.sender));
+            op = val.subDelegation(_amount, payable(msg.sender), _isUnbound);
         }
         afterLessStake(_val, val, _amount, op);
     }
@@ -525,7 +525,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         doExit(_val, false);
     }
 
-    function doExit(address _val, bool byValidator) private returns(uint256){
+    function doExit(address _val, bool byValidator) private returns (uint256) {
         IValidator val = valMaps[_val];
         RankingOp op = RankingOp.Noop;
         uint amount = 0;
@@ -542,12 +542,13 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
      * @dev reStaking is used for a validator to move it's self stake.
      * @param _oldVal, the validitor moved from.
      * @param _newVal, the validitor moved to.
-    **/
+     **/
 
-
-    function reStaking(address _oldVal, address _newVal, uint256 _amount) external onlyExistsAndByManager(_oldVal) 
-    onlyExists(_newVal)
-    {
+    function reStaking(
+        address _oldVal,
+        address _newVal,
+        uint256 _amount
+    ) external onlyExistsAndByManager(_oldVal) onlyExists(_newVal) {
         doReStake(_oldVal, _newVal, _amount, true);
     }
 
@@ -555,16 +556,16 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
      * @dev reDelegation is used for a user to move it's self stake.
      * @param _oldVal, the validitor moved from.
      * @param _newVal, the validitor moved to.
-    **/
-    function reDelegation(address _oldVal, address _newVal,uint256 _amount) external 
-    onlyExists(_oldVal) 
-    onlyExists(_newVal)
-    {
-        doReStake(_oldVal,_newVal, _amount,false);
+     **/
+    function reDelegation(
+        address _oldVal,
+        address _newVal,
+        uint256 _amount
+    ) external onlyExists(_oldVal) onlyExists(_newVal) {
+        doReStake(_oldVal, _newVal, _amount, false);
     }
 
-
-    function doReStake(address _oldVal,address _newVal,uint256 _amount,bool byValidator) private {
+    function doReStake(address _oldVal, address _newVal, uint256 _amount, bool _byValidator) private {
         require(_amount > 0, "E23");
         ValidatorInfo memory vInfo = valInfos[_oldVal];
         // no enough stake to subtract
@@ -572,18 +573,19 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
 
         IValidator oldVal = valMaps[_oldVal];
         RankingOp op = RankingOp.Noop;
-        
-        if (byValidator) {
+
+        if (_byValidator) {
             doClaimAny(_oldVal, true);
-            op = oldVal.subStakeWithUnbound(_amount);
-            afterLessStake(_oldVal, oldVal, _amount, op);
-            addStakeOrDelegation(_newVal, msg.sender, _amount, false);
+            op = oldVal.subStake(_amount, false);
         } else {
-            doClaimAny(_oldVal,false);
-            op = oldVal.subDelegationWithUnbound(_amount,msg.sender);
-            afterLessStake(_oldVal, oldVal, _amount, op);
-            addStakeOrDelegation(_newVal, msg.sender, _amount, false);
+            doClaimAny(_oldVal, false);
+            op = oldVal.subDelegation(_amount, msg.sender, false);
         }
+        afterLessStake(_oldVal, oldVal, _amount, op);
+        // the stakes no longer belongs to the old validator, so we need to subtract it from the old validator's unWithdrawn stakes.
+        ValidatorInfo storage info = valInfos[_oldVal];
+        info.unWithdrawn -= _amount;
+        addStakeOrDelegation(_newVal, msg.sender, _amount, false);
     }
 
     // @dev validatorClaimAny claims any token that can be send to the manager of the specific validator.
