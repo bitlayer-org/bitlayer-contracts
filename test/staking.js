@@ -113,9 +113,10 @@ describe("Staking test", function () {
             let addr = await staking.allValidatorAddrs(i - 1);
             expect(signers[i]).to.eq(addr);
             expect(await staking.valMaps(addr)).to.be.properAddress;
-            let info = await staking.valInfos(addr);
-            expect(info.stake).to.eq(utils.ethToWei("0"));
-            expect(info.unWithdrawn).to.eq(utils.ethToWei("0"));
+            let valContractAddr = await staking.valMaps(addr);
+            let val = valFactory.attach(valContractAddr);
+            expect(await val.totalStake()).to.eq(utils.ethToWei("0"));
+            expect(await val.totalUnWithdrawn()).to.eq(utils.ethToWei("0"));
         }
 
         await expect(staking.initValidator(signers[1], signers[1], 50, true)).to.be.revertedWith("E07");
@@ -328,9 +329,10 @@ describe("Staking test", function () {
             expect(lazyVal).equal(activeValidators[i]);
         }
         let topVals = await staking.getTopValidators(100);
-        let oldInfo = await staking.valInfos(activeValidators[0]);
-        let oldtotalStake = await staking.totalStakes();
         let valContractAddr = await staking.valMaps(activeValidators[0]);
+        let val = valFactory.attach(valContractAddr);
+        let oldInfo = { stake: await val.totalStake(), unWithdrawn: await val.totalUnWithdrawn() };
+        let oldtotalStake = await staking.totalStakes();
         for (let i = 1; i < params.LazyPunishThreshold; i++) {
             let tx = await staking.lazyPunish(activeValidators[0]);
             let receipt = await tx.wait();
@@ -353,7 +355,7 @@ describe("Staking test", function () {
                 if (oldInfo.stake < slashAmount) {
                     amountFromCurrStakes = oldInfo.stake;
                 }
-                let newInfo = await staking.valInfos(activeValidators[0]);
+                let newInfo = { stake: await val.totalStake(), unWithdrawn: await val.totalUnWithdrawn() };
                 expect(newInfo.stake).to.eq(oldInfo.stake - BigInt(amountFromCurrStakes));
                 expect(newInfo.unWithdrawn).to.eq(oldInfo.unWithdrawn - (slashAmount));
                 expect(await staking.totalStakes()).to.eq(oldtotalStake - (amountFromCurrStakes));
@@ -364,10 +366,12 @@ describe("Staking test", function () {
     it('10. Multiple crimes during punishment', async () => {
         let oldtotalStake = await staking.totalStakes();
         let activeValidators = await staking.getActiveValidators();
-        let val = activeValidators[1];
-        let oldInfo = await staking.valInfos(val);
+        let valAddr = activeValidators[1];
+        let valContractAddr = await staking.valMaps(valAddr);
+        let val = valFactory.attach(valContractAddr);
+        let oldInfo = { stake: await val.totalStake(), unWithdrawn: await val.totalUnWithdrawn() };
         for (let i = 0; i < params.LazyPunishThreshold; i++) {
-            let tx = await staking.lazyPunish(val);
+            let tx = await staking.lazyPunish(valAddr);
             let receipt = await tx.wait();
             expect(receipt.status).equal(1);
         }
@@ -376,7 +380,7 @@ describe("Staking test", function () {
         if (oldInfo.stake < slashAmount) {
             amountFromCurrStakes = oldInfo.stake;
         }
-        let newInfo = await staking.valInfos(val);
+        let newInfo = { stake: await val.totalStake(), unWithdrawn: await val.totalUnWithdrawn() };
         expect(newInfo.stake).to.eq(oldInfo.stake - BigInt(amountFromCurrStakes));
         // let accRewardsPerStake = await staking.accRewardsPerStake();
         // expect(newInfo.debt).to.eq(accRewardsPerStake * newInfo.stake);
@@ -504,10 +508,11 @@ describe("Staking test", function () {
         // address(0) 
         await expect(stakingLocked.subStake("0x0000000000000000000000000000000000000000", deltaEth)).to.be.revertedWith("E08");
         await expect(stakingLocked.subStake(signer50.address, deltaEth)).to.be.revertedWith("E02");
-        await expect(stakingLocked.subStake(signer2.address, deltaEth)).to.be.revertedWith("E24");
+        await expect(stakingLocked.subStake(signer2.address, deltaEth)).to.be.revertedWith("E28");
 
-        let amount2 = await staking.valInfos(signer2.address);
-        console.log("stake2", amount2.stake);
+        let valContractAddr = await staking.valMaps(signer2.address);
+        let val = valFactory.attach(valContractAddr);
+        console.log("stake2", val.totalStake());
 
         // Calculate the upper limit of substake in advance
         // canRelease = 2000000 / 100
@@ -517,10 +522,8 @@ describe("Staking test", function () {
         // expect(receipt.status).equal(1);
 
         let oldtotalStake = await staking.totalStakes();
-        let valContractAddr = await staking.valMaps(signer2.address);
-        let val = valFactory.attach(valContractAddr);
         expect(await val.state()).equal(2); //Jail
-        await expect(stakingLocked.subStake(signer2.address, deltaEth + 1)).to.be.revertedWith("E24");
+        await expect(stakingLocked.subStake(signer2.address, deltaEth + 1)).to.be.revertedWith("E28");
 
         let signer20 = signers[20];
         let admin20 = signers[45];
@@ -536,8 +539,7 @@ describe("Staking test", function () {
         await stakingLocked.addStake(signer20.address, params.singleValStake);
 
         oldtotalStake = await staking.totalStakes();
-        let amount = await staking.valInfos(signer20.address);
-        console.log("stake", amount.stake);
+        console.log("stake", val.totalStake());
 
         tx = await stakingLocked.subStake(signer20.address, utils.ethToWei(deltaEth.toString()));
 
@@ -758,12 +760,12 @@ describe("Staking test", function () {
         await staking.distributeBlockFee({ value: blockFee });
 
         // old val exit
-        await expect(staking.connect(admin20).reStaking(signer20.address, signer50.address, diffWei)).to.be.revertedWith("E24");
+        await expect(staking.connect(admin20).reStaking(signer20.address, signer50.address, diffWei)).to.be.revertedWith("E28");
         // new val exit
 
         await expect(staking.connect(admin5).reStaking(signer5.address, signer20.address, diffWei)).to.be.revertedWith("E28");
 
-        await expect(staking.connect(admin2).reStaking(signer2.address, signer50.address, diffWei)).to.be.revertedWith("E24");
+        await expect(staking.connect(admin2).reStaking(signer2.address, signer50.address, diffWei)).to.be.revertedWith("E28");
 
         let rewards = await staking.anyClaimable(signer5.address, admin5.address);
 
@@ -829,7 +831,7 @@ describe("Staking test", function () {
         await staking.distributeBlockFee({ value: blockFee });
 
         // old val exit
-        await expect(staking.connect(admin20).reDelegation(signer20.address, signer50.address, diffWei)).to.be.revertedWith("E24");
+        await expect(staking.connect(admin20).reDelegation(signer20.address, signer50.address, diffWei)).to.be.revertedWith("E28");
         // new val exit
 
         await expect(staking.connect(admin5).reDelegation(signers[14].address, signer20.address, diffWei)).to.be.revertedWith("E28");

@@ -11,6 +11,7 @@ interface IValidator {
     function manager() external view returns (address);
 
     function totalStake() external view returns (uint);
+    function totalUnWithdrawn() external view returns (uint);
 
     function addStake(uint256 _amount) external returns (RankingOp);
 
