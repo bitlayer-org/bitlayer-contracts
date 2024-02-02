@@ -53,10 +53,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     address[] activeValidators;
     address[] backupValidators;
     mapping(address => uint8) actives;
-    // total votes of all current active validators
-    uint activeTotalStakes;
-    // total votes of all current backup validators
-    uint backupTotalStakes;
 
     address[] public allValidatorAddrs; // all validator addresses, for traversal purpose
     mapping(address => IValidator) public valMaps; // mapping from validator address to validator contract.
@@ -212,31 +208,24 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         }
 
         activeValidators = _newSet;
-        uint _aTotalStake = 0;
         for (uint8 i = 0; i < activeValidators.length; i++) {
             actives[activeValidators[i]] = 1;
             IValidator _pool = valMaps[activeValidators[i]];
             if (_pool == EMPTY_ADDRESS) {
                 revert();
             }
-            _aTotalStake += _pool.totalStake();
         }
-        activeTotalStakes = _aTotalStake;
 
         delete backupValidators;
-        uint _bvTotalStake = 0;
         uint8 _size = MaxBackups;
         IValidator _cur = topValidators.head;
         while (_size > 0 && _cur != EMPTY_ADDRESS) {
             if (actives[_cur.validator()] == 0) {
                 backupValidators.push(_cur.validator());
-                _bvTotalStake += _cur.totalStake();
                 _size--;
             }
             _cur = topValidators.next[_cur];
         }
-
-        backupTotalStakes = _bvTotalStake;
     }
 
     // distributeBlockFee distributes block fees to all active validators
@@ -248,55 +237,62 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         // #endif
         onlyOperateOnce(Operation.DistributeFee)
     {
-        if (msg.value > 0) {
-            /**+
-             * 1. 80% * 30% to backup validators(if any), distribute by staking
-             * 2. 80% * 70% (or if there's no backup validators, then just 80%) to active validators.
-             * 3. the left(about 20%) to foundationPool;
-             */
-            uint allFee = msg.value * COEFFICIENT;
-            uint left = msg.value;
+        // distribute the fees at the end of a epoch
+        if ((block.number + 1) % blockEpoch == 0) {
+            uint256 fees = address(this).balance;
+            if (fees > 0) {
+                /**+
+                 * 1. 80% * 30% to backup validators(if any), distribute by staking
+                 * 2. 80% * 70% (or if there's no backup validators, then just 80%) to active validators.
+                 * 3. the left(about 20%) to foundationPool;
+                 */
+                uint allFee = fees * COEFFICIENT;
+                uint left = fees;
 
-            uint activeRewards = (allFee * ActiveValidatorFeePercent) / 100;
-            uint backupRewards = (allFee * BackupValidatorFeePercent) / 100;
-            if (backupTotalStakes > 0) {
-                left = distributeFeeToVals(left, backupRewards, backupTotalStakes, backupValidators);
-            } else {
-                activeRewards += backupRewards;
-            }
-
-            // On the chain launch stage, the initial validators have no stakes
-            if (activeTotalStakes == 0) {
-                uint cnt = activeValidators.length;
-                uint reward = (activeRewards / cnt) / COEFFICIENT;
-                for (uint i = 0; i < cnt; i++) {
-                    IValidator val = valMaps[activeValidators[i]];
-                    val.receiveFee{value: reward}();
+                uint activeRewards = (allFee * ActiveValidatorFeePercent) / 100;
+                uint backupRewards = (allFee * BackupValidatorFeePercent) / 100;
+                if (backupValidators.length > 0) {
+                    left = distributeFeeToVals(left, backupRewards, backupValidators);
+                } else {
+                    activeRewards += backupRewards;
                 }
-                left -= reward * cnt;
-            } else {
-                left = distributeFeeToVals(left, activeRewards, activeTotalStakes, activeValidators);
-            }
 
-            // the left should be around 20%
-            sendValue(foundationPool, left);
+                left = distributeFeeToVals(left, activeRewards, activeValidators);
+
+                // the left should be around 20%
+                sendValue(foundationPool, left);
+            }
         }
     }
 
     function distributeFeeToVals(
         uint left,
         uint totalRewardsEnlarged,
-        uint valsAllStakes,
         address[] memory validators
     ) internal returns (uint) {
-        // rewards per stake
-        uint rps = totalRewardsEnlarged / valsAllStakes;
+        uint256 currTotal = 0;
         uint cnt = validators.length;
         for (uint i = 0; i < cnt; i++) {
-            IValidator val = valMaps[validators[i]];
-            uint reward = (rps * val.totalStake()) / COEFFICIENT;
-            val.receiveFee{value: reward}();
-            left -= reward;
+            IValidator ival = valMaps[validators[i]];
+            currTotal += ival.totalStake();
+        }
+        // On the chain launch stage, the initial validators have no stakes
+        if (currTotal == 0) {
+            uint reward = (totalRewardsEnlarged / cnt) / COEFFICIENT;
+            for (uint i = 0; i < cnt; i++) {
+                IValidator val = valMaps[validators[i]];
+                val.receiveFee{value: reward}();
+            }
+            left -= reward * cnt;
+        } else {
+            // rewards per stake
+            uint rps = totalRewardsEnlarged / currTotal;
+            for (uint i = 0; i < cnt; i++) {
+                IValidator ival = valMaps[validators[i]];
+                uint reward = (rps * ival.totalStake()) / COEFFICIENT;
+                ival.receiveFee{value: reward}();
+                left -= reward;
+            }
         }
         return left;
     }

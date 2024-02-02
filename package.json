@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "compile": "NET=mainnet npx hardhat compile",
-    "test": "npx hardhat test"
+    "test": "NET=devnet npx hardhat test"
   },
   "license": "GPL-3.0",
   "devDependencies": {
