@@ -13,7 +13,7 @@ contract Validator is WithAdmin, IValidator {
     uint256 public override totalStake; // total stakes, = selfStake + allOtherDelegation
     bool public acceptDelegation; // Does this validator accepts delegation
     State public override state;
-    uint256 public totalUnWithdrawn;
+    uint256 public override totalUnWithdrawn;
 
     // A valid commission rate must in the range [0,100]
     modifier onlyValidRate(uint _rate) {

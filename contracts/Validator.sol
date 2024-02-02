@@ -45,7 +45,7 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
     uint256 public override totalStake; // total stakes, = selfStake + allOtherDelegation
     bool public acceptDelegation; // Does this validator accepts delegation
     State public override state;
-    uint256 public totalUnWithdrawn;
+    uint256 public override totalUnWithdrawn;
 
     // these values are all enlarged by COEFFICIENT times.
     uint256 private currCommission; // current withdraw-able commission

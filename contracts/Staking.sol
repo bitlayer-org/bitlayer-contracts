@@ -19,12 +19,6 @@ import "./interfaces/IERC20.sol";
 contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard {
     using SortedLinkedList for SortedLinkedList.List;
 
-    // ValidatorInfo records necessary information about a validator
-    struct ValidatorInfo {
-        uint stake;
-        uint unWithdrawn; // total un-withdrawn stakes, in case the validator need to be punished, the punish amount will calculate according to this.
-    }
-
     struct LazyPunishRecord {
         uint256 missedBlocksCounter;
         uint256 index;
@@ -56,7 +50,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
 
     address[] public allValidatorAddrs; // all validator addresses, for traversal purpose
     mapping(address => IValidator) public valMaps; // mapping from validator address to validator contract.
-    mapping(address => ValidatorInfo) public valInfos; // validator infos for rewards.
     // A sorted linked list of all valid validators
     SortedLinkedList.List topValidators;
 
@@ -149,7 +142,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         IValidator val = new Validator(_val, _manager, _rate, 0, _acceptDelegation, State.Ready);
         allValidatorAddrs.push(_val);
         valMaps[_val] = val;
-        valInfos[_val] = ValidatorInfo(0, 0);
 
         topValidators.improveRanking(val);
     }
@@ -375,15 +367,12 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         // the slash amount will calculate from unWithdrawn stakes,
         // and then slash immediately, and first try subtracting the slash amount from staking record.
         // If there's no enough stake, it means some of the slash amount will come from the pending unbound staking.
-        ValidatorInfo storage vInfo = valInfos[_val];
-        uint slashAmount = (vInfo.unWithdrawn * _factor) / PunishBase;
+        uint slashAmount = (val.totalUnWithdrawn() * _factor) / PunishBase;
         uint amountFromCurrStakes = slashAmount;
-        if (vInfo.stake < slashAmount) {
-            amountFromCurrStakes = vInfo.stake;
+        if (val.totalStake() < slashAmount) {
+            amountFromCurrStakes = val.totalStake();
         }
-        vInfo.stake -= amountFromCurrStakes;
         totalStakes -= amountFromCurrStakes;
-        vInfo.unWithdrawn -= slashAmount;
         emit TotalStakesChanged(_val, totalStakes + amountFromCurrStakes, totalStakes);
 
         val.punish(_factor);
@@ -422,7 +411,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         IValidator val = new Validator(_val, _manager, _rate, _stakeAmount, _acceptDelegation, vState);
         allValidatorAddrs.push(_val);
         valMaps[_val] = val;
-        valInfos[_val] = ValidatorInfo(_stakeAmount, _stakeAmount);
 
         totalStakes += _stakeAmount;
         // If the validator is Ready, add it to the topValidators and sort
@@ -473,12 +461,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         } else {
             op = val.addDelegation(_amount, _tokenOwner);
         }
-        // update rewards info
-        ValidatorInfo storage vInfo = valInfos[_val];
-        // First, add stake
-        vInfo.stake += _amount;
-        vInfo.unWithdrawn += _amount;
-
+        // add total stake
         totalStakes += _amount;
 
         updateRanking(val, op);
@@ -499,9 +482,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     function subStakeOrDelegation(address _val, uint256 _amount, bool _byValidator, bool _isUnbound) private {
         // the input _amount should not be zero
         require(_amount > 0, "E23");
-        ValidatorInfo memory vInfo = valInfos[_val];
-        // no enough stake to subtract
-        require(vInfo.stake >= _amount, "E24");
 
         IValidator val = valMaps[_val];
         RankingOp op = RankingOp.Noop;
@@ -563,9 +543,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
 
     function doReStake(address _oldVal, address _newVal, uint256 _amount, bool _byValidator) private {
         require(_amount > 0, "E23");
-        ValidatorInfo memory vInfo = valInfos[_oldVal];
-        // no enough stake to subtract
-        require(vInfo.stake >= _amount, "E24");
 
         IValidator oldVal = valMaps[_oldVal];
         RankingOp op = RankingOp.Noop;
@@ -578,9 +555,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
             op = oldVal.subDelegation(_amount, msg.sender, false);
         }
         afterLessStake(_oldVal, oldVal, _amount, op);
-        // the stakes no longer belongs to the old validator, so we need to subtract it from the old validator's unWithdrawn stakes.
-        ValidatorInfo storage info = valInfos[_oldVal];
-        info.unWithdrawn -= _amount;
         addStakeOrDelegation(_newVal, msg.sender, _amount, false);
     }
 
@@ -610,7 +584,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
             }
         }
         if (releaseAmount > 0) {
-            valInfos[_val].unWithdrawn -= releaseAmount;
             SafeERC20.safeTransfer(brcToken, msg.sender, releaseAmount);
             emit StakeWithdrawn(_val, msg.sender, releaseAmount);
         } else {
@@ -629,9 +602,6 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     }
 
     function afterLessStake(address _val, IValidator val, uint _amount, RankingOp op) private {
-        ValidatorInfo storage vInfo = valInfos[_val];
-        vInfo.stake -= _amount;
-
         totalStakes -= _amount;
         updateRanking(val, op);
         emit TotalStakesChanged(_val, totalStakes + _amount, totalStakes);
