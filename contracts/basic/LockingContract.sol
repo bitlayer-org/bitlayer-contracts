@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-import "./interfaces/IERC20.sol";
+import "../interfaces/IERC20.sol";
 
 pragma solidity ^0.8.0;
 
