@@ -74,7 +74,7 @@ describe("Staking test", function () {
         staking = await factory.deploy();
         console.log(staking.target);
         expect(staking.target).to.be.properAddress
-        valFactory = await hre.ethers.getContractFactory("cache/solpp-generated-contracts/Validator.sol:Validator", owner);
+        valFactory = await hre.ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator", owner);
     });
 
     it('1. initialize', async () => {

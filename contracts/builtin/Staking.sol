@@ -14,7 +14,7 @@ import "./interfaces/types.sol";
 import "./library/initializable.sol";
 import "./library/ReentrancyGuard.sol";
 import "./library/SafeERC20.sol";
-import "./interfaces/IERC20.sol";
+import "../interfaces/IERC20.sol";
 
 contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard {
     using SortedLinkedList for SortedLinkedList.List;

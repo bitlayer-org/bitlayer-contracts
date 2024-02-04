@@ -60,7 +60,7 @@ describe("Staking Test", function () {
         let Staking = await ethers.getContractFactory("Staking");
         instance = await Staking.deploy();
         [owner,user1,user2,user3, ...users] = await ethers.getSigners();
-        valFactory = await ethers.getContractFactory("cache/solpp-generated-contracts/Validator.sol:Validator");
+        valFactory = await ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator");
 
         // address _admin,
         // address _brcAddress,
