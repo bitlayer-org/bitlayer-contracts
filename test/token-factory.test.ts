@@ -45,4 +45,24 @@ describe("TokenFactory", function () {
     expect(balanceAfter - balanceBefore).to.equal(mintAmount);
   });
 
+  it("transfer ownership", async function() {
+    const { tfactory,owner, player1, admin1, admin2 } = await loadFixture(deployer);
+    const AdminRole = await tfactory.AdminRole();
+
+    await expect(
+      tfactory.connect(player1).grantRole(AdminRole, admin2.address)
+    ).to.reverted;
+
+    await tfactory.connect(owner).transferOwnership(player1.address);
+
+    await expect(
+      tfactory.connect(owner).grantRole(AdminRole, admin2.address)
+    ).to.reverted;
+
+    await tfactory.connect(player1).grantRole(AdminRole, admin2.address)
+
+    expect(
+      await tfactory.hasRole(AdminRole, admin2.address)
+    ).to.be.true;
+  });
 });
