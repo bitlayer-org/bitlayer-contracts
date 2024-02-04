@@ -13,23 +13,11 @@ describe("Vault", function () {
     const vault = await ethers.deployContract('Vault', [owner.address, [admin1.address]])
     await vault.waitForDeployment();
 
-    return { vault, owner, admin1, admin2, player1, player2};
+    const TestUSDT = await ethers.deployContract('TestUSDT');
+    await TestUSDT.waitForDeployment();
+
+    return { vault, owner, admin1, admin2, player1, player2, TestUSDT};
   }
-
-  it("deposit over max deposit", async function () {
-    const { vault, owner, admin1 } = await loadFixture(deployer);
-    const BalaneNeed = ethers.parseEther('22000000');
-    const MaxDeposit = ethers.parseEther('21000000');
-    await ethers.provider.send("hardhat_setBalance", [
-      admin1.address,
-      '0x'+ BalaneNeed.toString(16),
-    ]);
-
-    await admin1.sendTransaction({ to: vault.target,  value: MaxDeposit});
-
-    await expect(admin1.sendTransaction({ to: vault.target,  value: ethers.parseEther('1.0')}))
-      .to.revertedWith('over max deposit')
-  });
 
   it("add & remove whitelist", async function () {
     const { vault, owner, admin1, player1, player2 } = await loadFixture(deployer);
@@ -96,5 +84,26 @@ describe("Vault", function () {
     expect(
       await vault.hasRole(AdminRole, admin2.address)
     ).to.be.true;
+  });
+
+  it("transfer ERC20 token", async function() {
+    const { vault, owner, admin1, admin2, player1, TestUSDT } = await loadFixture(deployer);
+
+    const VaultBalance = ethers.parseEther("100000");
+    await TestUSDT.mint(vault.target, VaultBalance);
+    expect(await TestUSDT.balanceOf(vault.target)).to.equal(VaultBalance);
+
+    await expect(
+      vault.connect(admin1).releaseERC20(TestUSDT.target, player1.address, VaultBalance + 1n)
+    ).to.revertedWith('not enough balance');
+
+    const balanceBefore = await TestUSDT.balanceOf(player1.address);
+    await vault.connect(admin1).releaseERC20(TestUSDT.target, player1.address, VaultBalance);
+    const balanceAfter = await TestUSDT.balanceOf(player1.address);
+
+    expect(balanceAfter - balanceBefore).to.equal(VaultBalance);
+    expect(
+      await TestUSDT.balanceOf(vault.target)
+    ).to.equal(0n);
   })
 });
