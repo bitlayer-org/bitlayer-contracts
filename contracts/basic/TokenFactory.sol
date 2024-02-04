@@ -44,6 +44,7 @@ contract TokenFactory is AccessControl {
 
     event TokenDeployed(string symbol, address account);
     event TokenMinted(string symbol, address to, uint256 amount);
+    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
 
     mapping(bytes32 => address) public deployedTokens;
     EnumerableSet.Bytes32Set           totalDeployed;
@@ -54,6 +55,20 @@ contract TokenFactory is AccessControl {
         }
         _grantRole(OwnerRole, owner);
         _setRoleAdmin(AdminRole, OwnerRole);
+    }
+
+    function transferOwnership(
+        address newOwner
+    )
+        external
+        onlyRole(OwnerRole)
+    {
+        require(newOwner != msg.sender, "can not transfer to self");
+
+        _grantRole(OwnerRole, newOwner);
+        _revokeRole(OwnerRole, msg.sender);
+
+        emit OwnershipTransferred(msg.sender, newOwner);
     }
 
     function createErc20Token(
