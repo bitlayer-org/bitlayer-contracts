@@ -95,6 +95,12 @@ describe("Vault", function () {
 
     await expect(
       vault.connect(admin1).releaseERC20(TestUSDT.target, player1.address, VaultBalance + 1n)
+    ).to.revertedWith('to address not whitelisted');
+
+    await vault.connect(admin1).addWhitelist([player1.address]);
+
+    await expect(
+      vault.connect(admin1).releaseERC20(TestUSDT.target, player1.address, VaultBalance + 1n)
     ).to.revertedWith('not enough balance');
 
     const balanceBefore = await TestUSDT.balanceOf(player1.address);

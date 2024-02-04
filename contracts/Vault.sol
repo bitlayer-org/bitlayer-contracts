@@ -9,7 +9,6 @@ contract Vault is AccessControl {
     using EnumerableSet for EnumerableSet.AddressSet;
     bytes32 constant public OwnerRole = keccak256("bitlayer.vault.owner");
     bytes32 constant public AdminRole = keccak256("bitlayer.vault.admin");
-    uint256 constant public MaxDepoist = 21_000_000 ether;
 
     event WhitelistAdded(address indexed admin, address indexed whitelist);
     event WhitelistRemoved(address indexed admin, address indexed whitelist);
@@ -99,7 +98,8 @@ contract Vault is AccessControl {
         onlyRole(AdminRole)
     {
         require(erc20Token != address(0), "invalid token address");
-        require(to != address(0), "invalid to address");
+        require(whitelists.contains(to), "to address not whitelisted");
+
         IERC20 token = IERC20(erc20Token);
         require(token.balanceOf(address(this)) >= amount, "not enough balance");
 
