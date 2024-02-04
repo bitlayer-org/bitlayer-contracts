@@ -12,7 +12,8 @@ contract Params {
     uint8 public constant MaxValidators = 21;
     uint8 public constant MaxBackups = 79;
 
-    uint public constant MaxStakes = 24_000_000 ether; //  max total stakes for a validator
+    //  max total stakes for a validator, set to max supply to disable the limitation.
+    uint public constant MaxStakes = 1_000_000_000 ether; 
     // min total stakes for a validator to be a valid candidate.
     // Note: set it to MinSelfStakes so we can disable this requirement without changing the code.
     uint public constant ThresholdStakes = 50_000 ether;
@@ -20,7 +21,7 @@ contract Params {
     uint public constant StakeUnit = 1; // ether
 
     uint public constant JailPeriod = 86400; // amount of blocks, about 3 days at 3 sec/block.
-    uint public constant UnboundLockPeriod = 21 days; // Seconds delay when a validator unbound staking.
+    uint public constant UnboundLockPeriod = 28 days; // Seconds delay when a validator unbound staking.
     uint256 public constant PunishBase = 1000;
     uint256 public constant LazyPunishFactor = 10; // the punish factor when validator failed to propose blocks for specific times
     uint256 public constant LazyPunishThreshold = 48; // accumulate amount of missing blocks for a validator to be punished
