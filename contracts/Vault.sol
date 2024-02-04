@@ -14,6 +14,7 @@ contract Vault is AccessControl {
     event WhitelistRemoved(address indexed admin, address indexed whitelist);
     event TreasureReleased(address indexed admin, address indexed receiver, uint amount);
     event TreasureDepoist(address indexed sender, uint256 amount);
+    event OwnershipTransferred(address indexed oldOwner, address indexed newOwner);
 
     EnumerableSet.AddressSet whitelists;
     uint256 public totalDeposit;
@@ -32,6 +33,20 @@ contract Vault is AccessControl {
         totalDeposit += msg.value;
 
         emit TreasureDepoist(msg.sender, msg.value);
+    }
+
+    function transferOwnership(
+        address newOwner
+    )
+        external
+        onlyRole(OwnerRole)
+    {
+        require(newOwner != msg.sender, "can not transfer to self");
+
+        _grantRole(OwnerRole, newOwner);
+        _revokeRole(OwnerRole, msg.sender);
+
+        emit OwnershipTransferred(msg.sender, newOwner);
     }
 
     function addWhitelist(

@@ -76,4 +76,25 @@ describe("Vault", function () {
       vault.connect(admin2).removeWhitelist([player1.address])
     ).to.reverted;
   });
+
+  it("transfer ownership", async function() {
+    const { vault, owner, admin1, admin2, player1, player2 } = await loadFixture(deployer);
+    const AdminRole = await vault.AdminRole();
+
+    await expect(
+      vault.connect(player1).grantRole(AdminRole, admin2.address)
+    ).to.reverted;
+
+    await vault.connect(owner).transferOwnership(player1.address);
+
+    await expect(
+      vault.connect(owner).grantRole(AdminRole, admin2.address)
+    ).to.reverted;
+
+    await vault.connect(player1).grantRole(AdminRole, admin2.address)
+
+    expect(
+      await vault.hasRole(AdminRole, admin2.address)
+    ).to.be.true;
+  })
 });
