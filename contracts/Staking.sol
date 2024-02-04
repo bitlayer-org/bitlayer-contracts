@@ -157,6 +157,10 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         emit PermissionLess(isOpened);
     }
 
+    function changeFoundationPool(address payable _foundationPool) external onlyAdmin {
+        foundationPool = _foundationPool;
+    }
+
     // ** end of basic management **
 
     // ** functions that will be called by the chain-code **
