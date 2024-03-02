@@ -3,6 +3,7 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 contract Vault is AccessControl {
@@ -84,7 +85,8 @@ contract Vault is AccessControl {
         require(whitelists.contains(receiver), "receiver not whitelist");
         require(address(this).balance >= amount, "not enougt balance");
 
-        payable(receiver).transfer(amount);
+        (bool success, bytes memory reason) = receiver.call{value: amount}("");
+        require(success, string(reason));
 
         emit TreasureReleased(msg.sender, receiver, amount);
     }
@@ -103,7 +105,7 @@ contract Vault is AccessControl {
         IERC20 token = IERC20(erc20Token);
         require(token.balanceOf(address(this)) >= amount, "not enough balance");
 
-        token.transfer(to, amount);
+        SafeERC20.safeTransfer(token, to, amount);
 
         emit ERC20Released(erc20Token, to, amount);
     }
