@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import "../interfaces/IERC20.sol";
+import "../builtin/library/SafeERC20.sol"
 
 pragma solidity ^0.8.0;
 
@@ -51,7 +52,7 @@ contract LockingContract {
         
         for (uint256 i = 0; i < beneficiaries.length; i++) {
             require(lockingAmounts[i] > 0, "Total tokens must be greater than zero");
-
+            require(beneficiaries[i] != address(0),"Beneficiary should not be address 0" );
             vestingSchedules[beneficiaries[i]] = VestingSchedule(
                 lockingAmounts[i],
                 0,
@@ -63,6 +64,7 @@ contract LockingContract {
         }
         
         periodTime = _periodTime;
+        require(_lockingToken != address(0),"LockingToken should not be address 0" );
         LockingToken = _lockingToken;
 
         startTimestamp = block.timestamp;
@@ -131,8 +133,7 @@ contract LockingContract {
         require(tokensToRelease <=  IERC20(LockingToken).balanceOf(address(this)), "Insufficient balance");
         
         require(schedule.releasedAmount <= schedule.lockingAmount,"Vesting ended");
-
-        IERC20(LockingToken).transfer(msg.sender, tokensToRelease);
+        SafeERC20.safeTransfer(IERC20(LockingToken),msg.sender, tokensToRelease);
 
         emit TokensReleased(msg.sender, tokensToRelease);
     }
