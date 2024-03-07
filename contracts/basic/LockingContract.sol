@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 import "../interfaces/IERC20.sol";
-import "../builtin/library/SafeERC20.sol"
+import "../builtin/library/SafeERC20.sol";
 
 pragma solidity ^0.8.0;
 
