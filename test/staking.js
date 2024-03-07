@@ -249,7 +249,7 @@ describe("Staking test", function () {
 
         let staking2 = staking.connect(signers[1 + 25]);
         claimable = expectAccRPS * stake;
-        await brc.connect(account5).transfer(staking.target, claimable * BigInt(10));
+        // await brc.connect(account5).transfer(staking.target, claimable * BigInt(10));
 
         let amount1 = await staking.anyClaimable(signers[1].address, signers[1].address)
         expect(amount1[1]).to.eq(claimable);
