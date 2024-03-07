@@ -30,7 +30,7 @@ describe("BRC test", function(){
 
     it("more than totalsupply when construct",async function(){
         
-        await expect(BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("300000000",18)])).to.be.revertedWith("TotalSupply OverFlow");
+        await expect(BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("300000000",18)])).to.be.revertedWith("TotalSupply is not Distributed");
     })
 
     it("accounts.length is bigger then amounts.length",async function(){
@@ -49,6 +49,17 @@ describe("BRC test", function(){
         const bao = await brc.balanceOf(account4.address);
         console.log(bao.toString())
         expect(await brc.balanceOf(owner.address)).to.equal(ethers.parseUnits("200000000",18).toString());
+    })
+    it("BRC token details is correct",async function(){
+        const brc = await BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18)]);
+        var name = await brc.name();
+        var symbol = await brc.symbol();
+        var decimal = await brc.decimals();
+
+        expect(name).to.equal("BRC Token");
+        expect(symbol).to.equal("BRC");
+        expect(decimal).to.equal(18);
+
     })
 
     it("tranfer if correct",async function(){
