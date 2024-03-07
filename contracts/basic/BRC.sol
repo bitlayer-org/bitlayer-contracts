@@ -13,7 +13,9 @@ contract StandardToken is IERC20 {
             balances[_to] += _value;
             emit Transfer(msg.sender, _to, _value);
             return true;
-        } else { return false; }
+        } else {
+            revert("Transfer failed"); 
+        }
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public override returns (bool ) {
@@ -23,7 +25,9 @@ contract StandardToken is IERC20 {
             allowed[_from][msg.sender] -= _value;
             emit Transfer(_from, _to, _value);
             return true;
-        } else { return false; }
+        } else { 
+            revert("TransferFrom failed"); 
+        }
     }
 
     function balanceOf(address _owner) public override  view returns (uint256 ) {
