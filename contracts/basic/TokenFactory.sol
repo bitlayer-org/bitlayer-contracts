@@ -23,6 +23,7 @@ contract CustomERC20 is ERC20 {
         address       _factory
     ) ERC20(name, symbol) {
         _decimals = decimal;
+        require(_factory != address(0),"Factory should not be address 0");
         factory = _factory;
     }
 
