@@ -120,6 +120,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         address payable _foundationPool
     ) external initializer onlyValidAddress(_admin) onlyValidAddress(_brcAddress) {
         require(_epoch > 0, "E10");
+        require(_admin != address(0) && _brcAddress != address(0) && _foundationPool != address(0),"args should not be address 0");
         admin = _admin;
         brcToken = IERC20(_brcAddress);
         blockEpoch = _epoch;
@@ -158,6 +159,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     }
 
     function changeFoundationPool(address payable _foundationPool) external onlyAdmin {
+        require(_foundationPool != address(0),"foundationPool should not be address 0");
         foundationPool = _foundationPool;
     }
 
@@ -528,7 +530,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         address _oldVal,
         address _newVal,
         uint256 _amount
-    ) external onlyExistsAndByManager(_oldVal) onlyExists(_newVal) {
+    ) external nonReentrant onlyExistsAndByManager(_oldVal) onlyExists(_newVal) {
         doReStake(_oldVal, _newVal, _amount, true);
     }
 
@@ -541,7 +543,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
         address _oldVal,
         address _newVal,
         uint256 _amount
-    ) external onlyExists(_oldVal) onlyExists(_newVal) {
+    ) external nonReentrant onlyExists(_oldVal) onlyExists(_newVal) {
         doReStake(_oldVal, _newVal, _amount, false);
     }
 
