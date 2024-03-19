@@ -1,7 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-solpp";
-
+// import "@nomiclabs/hardhat-solpp";
+import "solidity-coverage";
 const prodConfig = {
   Mainnet: true,
 }
