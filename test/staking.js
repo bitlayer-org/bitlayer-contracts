@@ -74,7 +74,7 @@ describe("Staking test", function () {
         staking = await factory.deploy();
         console.log(staking.target);
         expect(staking.target).to.be.properAddress
-        valFactory = await hre.ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator", owner);
+        valFactory = await hre.ethers.getContractFactory("Validator", owner);
     });
 
     it('1. initialize', async () => {
@@ -863,5 +863,21 @@ describe("Staking test", function () {
         valContractAddr = await staking.valMaps(signer50.address);
         valContract = valFactory.attach(valContractAddr);
         await expect(valContract.addStake(1000)).to.be.revertedWith("E01");
+    });
+
+    it('20. Admin checks',async () =>{
+        let signer33 = signers[33];
+        let signer22 = signers[22];
+        await expect(staking.connect(signer33).changeAdmin(signer22.address)).to.be.rejectedWith("E02");
+        await staking.changeAdmin(signer22.address);
+        const pendingAdmin = await staking.pendingAdmin();
+        const admin = await staking.admin();
+        expect(pendingAdmin).to.be.equal(signer22.address);
+        expect(admin).to.not.be.equal(signer22.address);
+        expect(admin).to.be.equal(owner.address);
+        await expect(staking.connect(signer33).acceptAdmin()).to.be.rejectedWith("E03");
+        await staking.connect(signer22).acceptAdmin();
+        const admin1 = await staking.admin();
+        expect(admin1).to.be.equal(signer22.address);
     });
 })

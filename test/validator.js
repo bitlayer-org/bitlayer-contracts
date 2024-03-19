@@ -47,7 +47,7 @@ describe("Validator test", function () {
         vaddr = vSigner;
         adminSigner = signers[2];
         adminAddr = adminSigner;
-        factory = await hre.ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator", owner);
+        factory = await hre.ethers.getContractFactory("Validator", owner);
         currTotalStake = initStake;
         validator = await factory.deploy(vaddr, adminAddr, commissionRate, initStake, initAcceptDelegation, initState);
         
@@ -175,7 +175,7 @@ describe("Validator independent test", function () {
         adminAddr = adminSigner.address;
         delegator = signers[3].address;
 
-        factory = await hre.ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator", owner);
+        factory = await hre.ethers.getContractFactory("Validator", owner);
         validator = await factory.deploy(vaddr, adminAddr, commissionRate, stake, true, State.Idle);
         await validator.addDelegation(stake, delegator);
         currTotalStake = stake * BigInt(2);
@@ -640,7 +640,7 @@ describe("Validator punish test", function () {
         adminAddr = adminSigner.address;
         delegator = signers[3].address;
 
-        factory = await hre.ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator", owner);
+        factory = await hre.ethers.getContractFactory("Validator", owner);
         validator = await factory.deploy(vaddr, adminAddr, commissionRate, stake, true, State.Idle);
         await validator.addDelegation(stake, delegator);
         currTotalStake = stake * BigInt(2);
