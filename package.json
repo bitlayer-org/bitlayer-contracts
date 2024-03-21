@@ -16,6 +16,8 @@
     "hardhat": "^2.19.4"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.5",
+    "ethers": "^6.11.1",
     "solidity-coverage": "^0.8.11"
   }
 }
