@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-
-contract CustomERC20 is ERC20 {
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+contract CustomERC20 is ERC20 ,ERC20Permit{
 
     address public factory;
     uint8 private _decimals;
@@ -21,7 +21,7 @@ contract CustomERC20 is ERC20 {
         string memory symbol,
         uint8         decimal,
         address       _factory
-    ) ERC20(name, symbol) {
+    ) ERC20(name, symbol) ERC20Permit(name) {
         _decimals = decimal;
         require(_factory != address(0),"Factory should not be address 0");
         factory = _factory;

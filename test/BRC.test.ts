@@ -4,6 +4,8 @@ const {expect} = require("chai");
 const ethers = hre.ethers;
 const utils = require("./utils");
 const { exitCode } = require("process");
+const { ecsign } = require("ethereumjs-util");
+import  getPermitSignature from "./signPermit";
 
 describe("BRC test", function(){
     
@@ -12,15 +14,17 @@ describe("BRC test", function(){
     let account2;
     let account3;
     let account4;
-    let mockToken;
+    let account5;
+    let BRC;
 
     before( async function(){
-        signers = await hre.ethers.getSigners();
+        const signers = await hre.ethers.getSigners();
         owner =  signers[0];
         account1 = signers[1];
         account2 = signers[2];
         account3 = signers[3];
         account4 = signers[4];
+        account5 = signers[5];
 
         BRC = await hre.ethers.getContractFactory("BRC")
     })
@@ -82,5 +86,59 @@ describe("BRC test", function(){
         expect(await brc.balanceOf(owner.address)).to.equal(ethers.parseUnits("200000000",18).toString());
         expect(await brc.balanceOf(account1.address)).to.equal(ethers.parseUnits("300000000",18).toString());
         expect(await brc.allowance(account4.address,owner.address)).to.equal(ethers.parseUnits("100000000",18).toString());
+    })
+    it('permit test',async function(){
+        const brc = await BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18)]);
+        
+        var nonce = await brc.nonces(owner.address);
+        expect(nonce).to.be.equal(0);
+        var domainSeparator = await brc.DOMAIN_SEPARATOR();
+        console.log(domainSeparator.toString());
+     
+        const deadline = await utils.getLatestTimestamp();
+        const value = 100;
+
+        const DDL0 = deadline + 700 ;
+        var signature = await getPermitSignature(owner,brc,account5.address,value.toString(),DDL0.toString())
+        
+
+        await expect(brc.connect(account1).permit(
+            owner.address,
+            account5.address,
+            value,
+            DDL0,
+            signature.v, 
+            signature.r, 
+            signature.s
+        )).to.not.be.reverted;
+
+        const allowance = await brc.allowance(owner.address,account5.address)
+        expect(allowance).to.be.equal(100);
+
+        var DDL1 = deadline - 700;
+        var signature = await getPermitSignature(owner,brc,account5.address,value.toString(),DDL1.toString())
+
+        await expect(brc.connect(account1).permit(
+            owner.address,
+            account5.address,
+            value,
+            DDL1,
+            signature.v, 
+            signature.r, 
+            signature.s
+        )).to.be.revertedWith("ERC20Permit: expired deadline");
+
+        const DDL2 = deadline + 900;
+        var signature = await getPermitSignature(owner,brc,account5.address,value.toString(),DDL2.toString())
+
+        await expect(brc.connect(account1).permit(
+            account1.address,
+            account5.address,
+            value,
+            DDL2,
+            signature.v, 
+            signature.r, 
+            signature.s
+        )).to.be.revertedWith("ERC20Permit: invalid signature");
     })
 })

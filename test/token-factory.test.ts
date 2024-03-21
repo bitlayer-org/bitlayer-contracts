@@ -4,7 +4,8 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-
+import  getPermitSignature from "./signPermit";
+const hre = require("hardhat");
 describe("TokenFactory", function () {
 
   async function deployer() {
@@ -17,7 +18,7 @@ describe("TokenFactory", function () {
   }
 
   it("deploy & mint erc20", async function () {
-    const { tfactory, player1, admin1 } = await loadFixture(deployer);
+    const { owner, player2, tfactory, player1, admin1 } = await loadFixture(deployer);
     const name = "Test USDT";
     const symbol = "TUSDT";
     const decimal = 6;
@@ -43,6 +44,55 @@ describe("TokenFactory", function () {
 
     const balanceAfter = await erc20.balanceOf(player1.address);
     expect(balanceAfter - balanceBefore).to.equal(mintAmount);
+
+    const block = await hre.ethers.provider.send("eth_getBlockByNumber", ['latest', false])
+  
+    
+    const deadline =  block.timestamp;
+    const value = 100;
+
+    const ddl0 = deadline + 600;
+    var signature = await getPermitSignature(owner,erc20,player1.address,value.toString(),ddl0.toString())
+        
+
+    await expect(erc20.connect(player2).permit(
+      owner.address,
+      player1.address,
+      value,        
+      ddl0,
+      signature.v, 
+      signature.r, 
+      signature.s
+    )).to.not.be.reverted;
+
+    const allowance = await erc20.allowance(owner.address,player1.address);
+    expect(allowance).to.be.equal(100);
+
+    const ddl = deadline - 7000;
+
+    var signature = await getPermitSignature(owner,erc20,player1.address,value.toString(),ddl.toString())
+    await expect(erc20.connect(player2).permit(
+      owner.address,
+      player1.address,
+      value,
+      ddl,
+      signature.v, 
+      signature.r, 
+      signature.s
+    )).to.be.revertedWith("ERC20Permit: expired deadline");
+
+    const ddl1 = deadline + 700;
+    var signature = await getPermitSignature(owner,erc20,player1.address,value.toString(),ddl1.toString())
+
+    await expect(erc20.connect(player2).permit(
+      player2.address,
+      player1.address,
+      value,
+      ddl1,
+      signature.v, 
+      signature.r, 
+      signature.s
+    )).to.be.revertedWith("ERC20Permit: invalid signature");
   });
 
   it("transfer ownership", async function() {
