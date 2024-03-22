@@ -771,9 +771,13 @@ describe("Staking test", function () {
 
         console.log(rewards);
 
+        const beforeAmount = await brc.balanceOf(admin5.address);
+        const beforeStaking = await brc.balanceOf(staking.target);
         let tx = await staking.connect(admin5).reStaking(signer5.address, signers[16].address, diffWei);
-
-
+        const AfterAmount = await brc.balanceOf(admin5.address);
+        const afterStaking = await brc.balanceOf(staking.target);
+        expect(beforeStaking - afterStaking).to.be.equal(0);
+        expect((beforeAmount - AfterAmount)).to.be.equal(0);
         await expect(tx).to
             .emit(staking, "TotalStakesChanged")
             .withArgs(signer5.address, oldtotalStake, oldtotalStake - diffWei);
