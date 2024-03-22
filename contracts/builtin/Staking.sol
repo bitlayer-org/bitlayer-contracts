@@ -444,7 +444,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
      * @param _amount the stake amount
      */
     function addStake(address _val, uint256 _amount) external onlyExistsAndByManager(_val) {
-        addStakeOrDelegation(_val, msg.sender, _amount, true);
+        addStakeOrDelegation(_val, msg.sender, _amount, true, false);
     }
 
     /**
@@ -453,13 +453,15 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
      * @param _amount the stake amount
      */
     function addDelegation(address _val, uint256 _amount) external onlyExists(_val) {
-        addStakeOrDelegation(_val, msg.sender, _amount, false);
+        addStakeOrDelegation(_val, msg.sender, _amount, false, false);
     }
 
-    function addStakeOrDelegation(address _val, address _tokenOwner, uint256 _amount, bool _byValidator) private {
+    function addStakeOrDelegation(address _val, address _tokenOwner, uint256 _amount, bool _byValidator, bool _reStaking) private {
         require(_amount > 0, "E14");
-        takeStakedToken(_tokenOwner, _amount);
-
+        if(!_reStaking){
+            takeStakedToken(_tokenOwner, _amount);
+        }
+    
         IValidator val = valMaps[_val];
         RankingOp op = RankingOp.Noop;
         if (_byValidator) {
@@ -561,7 +563,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
             op = oldVal.subDelegation(_amount, msg.sender, false);
         }
         afterLessStake(_oldVal, oldVal, _amount, op);
-        addStakeOrDelegation(_newVal, msg.sender, _amount, false);
+        addStakeOrDelegation(_newVal, msg.sender, _amount, false, true);
     }
 
     // @dev validatorClaimAny claims any token that can be send to the manager of the specific validator.
