@@ -28,6 +28,7 @@ describe("LockingContract contract test", function () {
     let LockingContract;
     let LockingToken;
     let lockingContract;
+    const ZeroAddress = '0x0000000000000000000000000000000000000000';
     beforeEach(async function () {
 
         [owner, account1, account2, account3, account4, account5] = await hre.ethers.getSigners();
@@ -174,6 +175,37 @@ describe("LockingContract contract test", function () {
             LockingToken
         )).to.revertedWith("Locking Balance not Match");    
     });
+    it('should contract constuct fail when  Beneficiaris has address 0x0 ', async function () {
+        await expect(LockingContract.deploy(
+            [
+                owner.address,
+                account1.address,
+                account2.address,
+                ZeroAddress
+            ],
+            [
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('400000')
+            ],
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods
+            ],
+            periodTime,
+            LockingToken
+        )).to.revertedWith("Beneficiary should not be address 0");    
+    });
+
     // --------------------- change new Beneficiary ----------------------
     it("should not change the Beneficiary when the oldBeneficiary not exist",async function(){
         lockingContract = await LockingContract.deploy(
@@ -241,6 +273,39 @@ describe("LockingContract contract test", function () {
         console.log("LockingContract:: ",lockingContract.target);
         expect(await lockingContract.getVestingAmount(account1.address)).to.be.eq(0);
         await expect(lockingContract.connect(account1).changeBeneficiary(account2.address)).to.be.revertedWith("NewBeneficiary is Active");
+    })
+    it("should not change the Beneficiary when the newBeneficiary is Address 0x0",async function(){
+        lockingContract = await LockingContract.deploy(
+            [
+                owner.address,
+                account1.address,
+                account2.address,
+                account3.address
+            ],
+            [
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000'),
+                utils.ethToWei('300000')
+            ],
+            [
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods,
+                cliffPeriods
+            ],
+            [
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+                vestingPeriods,
+            ],
+            periodTime,
+            LockingToken
+        );
+        console.log("LockingContract:: ",lockingContract.target);
+        expect(await lockingContract.getVestingAmount(account1.address)).to.be.eq(0);
+        await expect(lockingContract.connect(account1).changeBeneficiary(ZeroAddress)).to.be.revertedWith("NewBeneficiary should not be address 0");
     })
 
     it("change to new Beneficiary and Claim tokens",async function(){

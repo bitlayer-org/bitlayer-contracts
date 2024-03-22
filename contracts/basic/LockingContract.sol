@@ -78,6 +78,7 @@ contract LockingContract {
         VestingSchedule storage schedule = vestingSchedules[msg.sender];
         require(schedule.isActive, "No active vesting schedule found");
         require(!vestingSchedules[newBeneficiary].isActive,"NewBeneficiary is Active");
+        require(newBeneficiary != address(0), "NewBeneficiary should not be address 0");
 
         vestingSchedules[newBeneficiary] = schedule;
         delete vestingSchedules[msg.sender];
