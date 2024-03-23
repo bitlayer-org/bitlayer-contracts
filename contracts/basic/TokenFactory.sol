@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 contract CustomERC20 is ERC20 ,ERC20Permit{
 
-    address public factory;
-    uint8 private _decimals;
+    address public immutable factory;
+    uint8 private immutable _decimals;
 
     modifier onlyFactory() {
         require(msg.sender == factory, "only factory");

@@ -3,7 +3,7 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { AddressLike, BytesLike} from "ethers";
+import { AddressLike, BytesLike, keccak256} from "ethers";
 
 interface Tx {
   to:    AddressLike;
@@ -53,7 +53,7 @@ describe("MultiSigWallet", function () {
     ).to.revertedWith("already signed");
 
     await expect(
-      wallet.connect(signer2).signTx(txHash.replace('2', '3'))
+      wallet.connect(signer2).signTx(keccak256("0x1223"))
     ).to.revertedWith("tx not exist");
 
     await expect(
