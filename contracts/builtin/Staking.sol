@@ -201,12 +201,14 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     {
         // empty validators set
         require(_newSet.length > 0, "E18");
-        for (uint8 i = 0; i < activeValidators.length; i++) {
+        uint256 activeValidatorsLen = activeValidators.length;
+        for (uint8 i = 0; i < activeValidatorsLen; i++) {
             actives[activeValidators[i]] = 0;
         }
 
         activeValidators = _newSet;
-        for (uint8 i = 0; i < activeValidators.length; i++) {
+        uint256 activeValidatorsLenNew = _newSet.length;
+        for (uint8 i = 0; i < activeValidatorsLenNew; i++) {
             actives[activeValidators[i]] = 1;
             IValidator _pool = valMaps[activeValidators[i]];
             if (_pool == EMPTY_ADDRESS) {
