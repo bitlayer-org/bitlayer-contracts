@@ -640,7 +640,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     function anyClaimable(
         address _val,
         address _stakeOwner
-    ) public view returns (uint claimableUnbound, uint claimableRewards) {
+    ) external view returns (uint claimableUnbound, uint claimableRewards) {
         if (valMaps[_val] == EMPTY_ADDRESS) {
             return (0, 0);
         }
