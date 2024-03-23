@@ -196,14 +196,13 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
         uint rewards = stakingRewards + currCommission;
         currCommission = 0;
         uint actualRewards = rewards / COEFFICIENT;
+        // calculates withdraw-able stakes
+        uint unboundAmount = processClaimableUnbound(validator);
+        totalUnWithdrawn -= unboundAmount;
         if (actualRewards > 0) {
             sendValue(_recipient, actualRewards);
             emit RewardsWithdrawn(validator, _recipient, actualRewards);
         }
-
-        // calculates withdraw-able stakes
-        uint unboundAmount = processClaimableUnbound(validator);
-        totalUnWithdrawn -= unboundAmount;
         return unboundAmount;
     }
 
@@ -285,10 +284,6 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
         dlg.settled = 0;
 
         uint actualRewards = rewards / COEFFICIENT;
-        if (actualRewards > 0) {
-            sendValue(_delegator, actualRewards);
-            emit RewardsWithdrawn(validator, _delegator, actualRewards);
-        }
 
         // calculates withdraw-able stakes
         _unboundAmount = processClaimableUnbound(_delegator);
@@ -302,6 +297,10 @@ contract Validator is Params, WithAdmin, SafeSend, IValidator {
             dlg.debt = 0;
         }
         totalUnWithdrawn -= _unboundAmount;
+        if (actualRewards > 0) {
+            sendValue(_delegator, actualRewards);
+            emit RewardsWithdrawn(validator, _delegator, actualRewards);
+        }
         return (_unboundAmount, _forceUnbound);
     }
 
