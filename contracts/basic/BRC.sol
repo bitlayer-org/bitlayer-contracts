@@ -7,11 +7,11 @@ contract BRC is ERC20, ERC20Permit {
         address[] memory accounts,
         uint256[] memory amounts
     ) ERC20("BRC Token","BRC") ERC20Permit("BRC Token"){
-        uint256 tokenAmount = 1000000000 ether;
+        uint256 tokenAmount = 1_000_000_000 ether;
         require(accounts.length == amounts.length,"Length Not Match");
         for(uint256 i = 0 ; i < accounts.length; i++){
             _mint(accounts[i], amounts[i]);
         }
         require(totalSupply() == tokenAmount, "TotalSupply is not Distributed");
-    }    
+    }
 }
