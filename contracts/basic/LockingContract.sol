@@ -10,7 +10,7 @@ contract LockingContract {
     /**
      * VestingSchedule is the locking info of beneficiary
      * @param lockingAmount the locking Amount of beneficiary
-     * @param releasedAmount released Amount of beneficiary,only update when claim 
+     * @param releasedAmount released Amount of beneficiary,only update when claim
      * @param cliffPeriod cliff Period,in this Period, beneficiary can get none token
      * @param vestingPeriod vesting Period, beneficiary can get LockingToken by Period
      * @param isActive when VestingSchedule has infomation
@@ -22,11 +22,11 @@ contract LockingContract {
         uint256 vestingPeriod;
         bool isActive;
     }
-   
-    uint256 public periodTime;          // the seconds of every period, both cliff and vesting, eg: 50 
-    address public LockingToken;        // locked token ,erc20 
-    uint256 public startTimestamp;      // init Time ,when constract is build
-    
+
+    uint256 public immutable periodTime;          // the seconds of every period, both cliff and vesting, eg: 50
+    address public immutable LockingToken;        // locked token ,erc20
+    uint256 public immutable startTimestamp;      // init Time ,when constract is build
+
 
     mapping(address => VestingSchedule) public vestingSchedules; // map of beneficiary
 
@@ -34,10 +34,10 @@ contract LockingContract {
     event TokensReleased(address indexed beneficiary, uint256 amount);
 
     constructor(
-        address[] memory beneficiaries, // array of beneficiaries         
-        uint256[] memory lockingAmounts,// array of lockingAmount one by one beneficiaries    
-        uint256[] memory cliffPeriods,  // array of cliffPeriod one by one beneficiaries    
-        uint256[] memory vestingPeriods, // array of vestingPeriod one by one beneficiaries    
+        address[] memory beneficiaries, // array of beneficiaries
+        uint256[] memory lockingAmounts,// array of lockingAmount one by one beneficiaries
+        uint256[] memory cliffPeriods,  // array of cliffPeriod one by one beneficiaries
+        uint256[] memory vestingPeriods, // array of vestingPeriod one by one beneficiaries
         uint256 _periodTime, //public periodTime
         address _lockingToken // lockedToken
     ) {
@@ -49,7 +49,7 @@ contract LockingContract {
         );
 
         uint256 lockingAmountSum;
-        
+
         for (uint256 i = 0; i < beneficiaries.length; i++) {
             require(lockingAmounts[i] > 0, "Total tokens must be greater than zero");
             require(beneficiaries[i] != address(0),"Beneficiary should not be address 0" );
@@ -62,7 +62,7 @@ contract LockingContract {
             );
             lockingAmountSum += lockingAmounts[i];
         }
-        
+
         periodTime = _periodTime;
         require(_lockingToken != address(0),"LockingToken should not be address 0" );
         LockingToken = _lockingToken;
@@ -86,7 +86,7 @@ contract LockingContract {
         emit BeneficiaryChanged(msg.sender, newBeneficiary);
     }
 
-    // get the beneficiary's Vesting Amount of Locking token when  vestingPeriod has pass 
+    // get the beneficiary's Vesting Amount of Locking token when  vestingPeriod has pass
     function getVestingAmount(address beneficiary) public view returns (uint256) {
         VestingSchedule memory schedule = vestingSchedules[beneficiary];
         require(schedule.isActive, "No active vesting schedule found");
@@ -132,7 +132,7 @@ contract LockingContract {
         schedule.releasedAmount += tokensToRelease;
 
         require(tokensToRelease <=  IERC20(LockingToken).balanceOf(address(this)), "Insufficient balance");
-        
+
         require(schedule.releasedAmount <= schedule.lockingAmount,"Vesting ended");
         SafeERC20.safeTransfer(IERC20(LockingToken),msg.sender, tokensToRelease);
 
