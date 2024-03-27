@@ -15,7 +15,8 @@ contract WithAdmin {
 
     function changeAdmin(address newAdmin) external onlyAdmin {
         require(newAdmin != address(0),"E09");
+        address oldAdmin = admin;
         admin = newAdmin;
-        emit AdminChanged(admin, newAdmin);
+        emit AdminChanged(oldAdmin, newAdmin);
     }
 }

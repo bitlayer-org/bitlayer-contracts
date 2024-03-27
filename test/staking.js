@@ -875,7 +875,8 @@ describe("Staking test", function () {
         let signer22 = signers[22];
         await expect(staking.connect(signer33).changeAdmin(signer22.address)).to.be.rejectedWith("E02");
         await expect(staking.changeAdmin(ZeroAddress)).to.be.rejectedWith("E09");
-        await staking.changeAdmin(signer22.address);
+        const tx = await staking.changeAdmin(signer22.address);
+        expect(tx).emit(staking,"AdminChanged").withArgs(owner.address,signer22.address);
         const admin = await staking.admin();
         expect(admin).to.be.equal(signer22.address);
     });
