@@ -6,7 +6,6 @@ pragma solidity 0.8.17;
 contract WithAdmin {
     address public admin; // Administrator. It's better a DAO (or a multiSigWallet).
 
-    event AdminChanging(address indexed newAdmin);
     event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
 
     modifier onlyAdmin() {
