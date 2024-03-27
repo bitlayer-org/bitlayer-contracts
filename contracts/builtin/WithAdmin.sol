@@ -5,7 +5,6 @@ pragma solidity 0.8.17;
 */
 contract WithAdmin {
     address public admin; // Administrator. It's better a DAO (or a multiSigWallet).
-    address public pendingAdmin; // New admin waiting to accept.
 
     event AdminChanging(address indexed newAdmin);
     event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
@@ -16,16 +15,8 @@ contract WithAdmin {
     }
 
     function changeAdmin(address newAdmin) external onlyAdmin {
-        pendingAdmin = newAdmin;
-
-        emit AdminChanging(newAdmin);
-    }
-
-    function acceptAdmin() external {
-        require(msg.sender == pendingAdmin, "E03");
-
-        emit AdminChanged(admin, pendingAdmin);
-        admin = pendingAdmin;
-        pendingAdmin = address(0);
+        require(newAdmin != address(0),"E09");
+        admin = newAdmin;
+        emit AdminChanged(admin, newAdmin);
     }
 }

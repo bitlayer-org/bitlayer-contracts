@@ -53,6 +53,7 @@ describe("Staking test", function () {
 
 
     let valFactory;
+    const ZeroAddress = '0x0000000000000000000000000000000000000000';
 
     before(async function () {
         // runs once before the first test in this block
@@ -164,7 +165,7 @@ describe("Staking test", function () {
 
         let topValidators = await staking.getTopValidators(0);
         const len = topValidators.length;
-        console.log(topValidators);
+        //console.log(topValidators);
         expect(len).to.be.eq(params.MaxValidators);
 
         while (true) {
@@ -221,19 +222,19 @@ describe("Staking test", function () {
 
         let number = await ethers.provider.getBlockNumber();
 
-        console.log("currTotalStake:", currTotalStake);
+        //console.log("currTotalStake:", currTotalStake);
         let stake = params.singleValStake;
         // let totalStake = stake.mul(3);
         currTotalStake = currTotalStake + stake;
         let expectAccRPS = params.rewardsPerBlock * BigInt(number);
         expectAccRPS = expectAccRPS / currTotalStake;
-        console.log("currTotalStake:", currTotalStake);
+        //console.log("currTotalStake:", currTotalStake);
         //console.log(expectAccRPS)
         // validator claimable
         let claimable = expectAccRPS * stake;
         let amount = await staking.anyClaimable(signers[1].address, signers[1 + 25].address)
         expect(amount[1]).to.eq(claimable);
-        console.log("claimable:", claimable);
+        //console.log("claimable:", claimable);
         // console.log("blockNumber: ", await ethers.provider.getBlockNumber())
 
         // claim any
@@ -245,7 +246,7 @@ describe("Staking test", function () {
         //console.log(expectAccRPS)
         let valContractAddr = await staking.valMaps(signers[1].address);
         let val = valFactory.attach(valContractAddr);
-        console.log("currTotalStake:", currTotalStake);
+        //console.log("currTotalStake:", currTotalStake);
 
         let staking2 = staking.connect(signers[1 + 25]);
         claimable = expectAccRPS * stake;
@@ -253,7 +254,7 @@ describe("Staking test", function () {
 
         let amount1 = await staking.anyClaimable(signers[1].address, signers[1].address)
         expect(amount1[1]).to.eq(claimable);
-        console.log(amount1[1]);
+        //console.log(amount1[1]);
         let tx = await staking2.validatorClaimAny(signers[1].address);
         //console.log("accRewardsPerStake ", await staking2.accRewardsPerStake());
         // await expect(tx).to
@@ -404,8 +405,8 @@ describe("Staking test", function () {
         // uint _stakeAmount,
         // bool _acceptDelegation
         await brc.connect(account5).transfer(valAdmin, params.singleValStake);
-        console.log(await brc.balanceOf(valAdmin));
-        console.log(stakeWei);
+        // console.log(await brc.balanceOf(valAdmin));
+        // console.log(stakeWei);
         await brc.connect(admin).approve(staking.target, params.singleValStake);
         let tx = await staking.registerValidator(val, valAdmin, 50, stakeWei, true);
         let receipt = await tx.wait();
@@ -455,7 +456,7 @@ describe("Staking test", function () {
         let oldValTotalStake = await valContract.totalStake();
 
         await brc.connect(account5).transfer(adminUnlocked.address, params.singleValStake);
-        console.log(await brc.balanceOf(adminUnlocked.address));
+        // console.log(await brc.balanceOf(adminUnlocked.address));
         await brc.connect(adminUnlocked).approve(staking.target, params.singleValStake);
 
         let tx = await stakingUnlocked.addStake(signerUnlocked.address, stakeWei / BigInt(2));
@@ -478,7 +479,7 @@ describe("Staking test", function () {
 
 
         await brc.connect(account5).transfer(delegator.address, params.singleValStake);
-        console.log(await brc.balanceOf(delegator.address));
+        // console.log(await brc.balanceOf(delegator.address));
         await brc.connect(delegator).approve(staking.target, params.singleValStake);
 
         tx = await stakingDelegator.addDelegation(signerUnlocked.address, stakeWei / BigInt(2));
@@ -512,7 +513,7 @@ describe("Staking test", function () {
 
         let valContractAddr = await staking.valMaps(signer2.address);
         let val = valFactory.attach(valContractAddr);
-        console.log("stake2", val.totalStake());
+        // console.log("stake2", val.totalStake());
 
         // Calculate the upper limit of substake in advance
         // canRelease = 2000000 / 100
@@ -533,13 +534,13 @@ describe("Staking test", function () {
         expect(await val.state()).equal(1);
 
         await brc.connect(account5).transfer(admin20.address, params.singleValStake);
-        console.log(await brc.balanceOf(admin20.address));
+        // console.log(await brc.balanceOf(admin20.address));
         await brc.connect(admin20).approve(staking.target, params.singleValStake);
 
         await stakingLocked.addStake(signer20.address, params.singleValStake);
 
         oldtotalStake = await staking.totalStakes();
-        console.log("stake", val.totalStake());
+        // console.log("stake", val.totalStake());
 
         tx = await stakingLocked.subStake(signer20.address, utils.ethToWei(deltaEth.toString()));
 
@@ -584,16 +585,16 @@ describe("Staking test", function () {
         let valContractAddr = await staking.valMaps(signer20.address);
         let valContract = valFactory.attach(valContractAddr);
         let oldtotalStake = await staking.totalStakes();
-        console.log("oldtotalStake", oldtotalStake);
+        // console.log("oldtotalStake", oldtotalStake);
         let oldValTotalStake = await valContract.totalStake();
-        console.log("oldValTotalStake", oldValTotalStake);
-        console.log("state", await valContract.state());
+        // console.log("oldValTotalStake", oldValTotalStake);
+        // console.log("state", await valContract.state());
 
 
         let valContractAddr15 = await staking.valMaps(signer15.address);
         let valContract15 = valFactory.attach(valContractAddr15);
 
-        console.log("state15", await valContract15.state());
+        // console.log("state15", await valContract15.state());
 
         let tx = await stakingDelegator.addDelegation(signer20.address, diffWei / BigInt(2));
         let receipt = await tx.wait();
@@ -741,17 +742,17 @@ describe("Staking test", function () {
         valContract = valFactory.attach(valContractAddr);
         let oldValTotalStake = await valContract.totalStake();
 
-        console.log("oldValTotalStake5", oldValTotalStake);
+        // console.log("oldValTotalStake5", oldValTotalStake);
 
         await brc.connect(account5).transfer(admin5.address, params.singleValStake);
-        console.log(await brc.balanceOf(admin5.address));
+        // console.log(await brc.balanceOf(admin5.address));
         await brc.connect(admin5).approve(staking.target, params.singleValStake);
 
         await staking.connect(admin5).addStake(signer5.address, diffWei * BigInt(2));
 
         let valTotalStake = await valContract.totalStake();
 
-        console.log("ValTotalStake5", valTotalStake);
+        // console.log("ValTotalStake5", valTotalStake);
 
         let oldtotalStake = await staking.totalStakes();
 
@@ -769,7 +770,7 @@ describe("Staking test", function () {
 
         let rewards = await staking.anyClaimable(signer5.address, admin5.address);
 
-        console.log(rewards);
+        // console.log(rewards);
 
         const beforeAmount = await brc.balanceOf(admin5.address);
         const beforeStaking = await brc.balanceOf(staking.target);
@@ -816,17 +817,17 @@ describe("Staking test", function () {
         valContract = valFactory.attach(valContractAddr);
         let oldValTotalStake = await valContract.totalStake();
 
-        console.log("oldValTotalStake5", oldValTotalStake);
+        // console.log("oldValTotalStake5", oldValTotalStake);
 
         await brc.connect(account5).transfer(admin5.address, params.singleValStake);
-        console.log(await brc.balanceOf(admin5.address));
+        // console.log(await brc.balanceOf(admin5.address));
         await brc.connect(admin5).approve(staking.target, params.singleValStake);
 
         await staking.connect(admin5).addDelegation(signers[14].address, diffWei * BigInt(2));
 
         let valTotalStake = await valContract.totalStake();
 
-        console.log("ValTotalStake5", valTotalStake);
+        // console.log("ValTotalStake5", valTotalStake);
 
         let oldtotalStake = await staking.totalStakes();
 
@@ -844,7 +845,7 @@ describe("Staking test", function () {
 
         let rewards = await staking.anyClaimable(signer5.address, admin5.address);
 
-        console.log(rewards);
+        // console.log(rewards);
 
         let tx = await staking.connect(admin5).reDelegation(signers[14].address, signers[16].address, diffWei);
 
@@ -873,15 +874,9 @@ describe("Staking test", function () {
         let signer33 = signers[33];
         let signer22 = signers[22];
         await expect(staking.connect(signer33).changeAdmin(signer22.address)).to.be.rejectedWith("E02");
+        await expect(staking.changeAdmin(ZeroAddress)).to.be.rejectedWith("E09");
         await staking.changeAdmin(signer22.address);
-        const pendingAdmin = await staking.pendingAdmin();
         const admin = await staking.admin();
-        expect(pendingAdmin).to.be.equal(signer22.address);
-        expect(admin).to.not.be.equal(signer22.address);
-        expect(admin).to.be.equal(owner.address);
-        await expect(staking.connect(signer33).acceptAdmin()).to.be.rejectedWith("E03");
-        await staking.connect(signer22).acceptAdmin();
-        const admin1 = await staking.admin();
-        expect(admin1).to.be.equal(signer22.address);
+        expect(admin).to.be.equal(signer22.address);
     });
 })
