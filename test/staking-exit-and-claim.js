@@ -65,13 +65,13 @@ describe("Staking Test", function () {
         // address _brcAddress,
         // uint256 _epoch,
         // address payable _foundationPool
-        console.log("Staking: ",instance.target);
+        // console.log("Staking: ",instance.target);
         BRC = await hre.ethers.getContractFactory("BRC");
         brc = await BRC.deploy(
             [user3.address],
             [ethers.parseUnits("1000000000",18)]
         );
-        console.log("BRC: ",brc.target);
+        // console.log("BRC: ",brc.target);
 
         let args = [
             owner.address,
@@ -106,7 +106,7 @@ describe("Staking Test", function () {
             // get validator contract
             let valContractAddr = await instance.valMaps(users[0].address);
             let validator = valFactory.attach(valContractAddr);
-            console.log("validator:",validator.target)
+            // console.log("validator:",validator.target)
             // check init state
             expect(await validator.state()).to.be.equal(1);
 
