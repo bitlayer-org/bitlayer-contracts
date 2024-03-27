@@ -37,17 +37,17 @@ describe("LockingContract contract test", function () {
             [account5.address],
             [ethers.parseUnits("1000000000",18)]
         );
-        console.log("BRC: ",brc.target);
+        // console.log("BRC: ",brc.target);
 
         LockingToken = brc.target;
 
         LockingContract = await hre.ethers.getContractFactory("LockingContract")
         const nonce = await owner.getNonce();
-        console.log("nonce:",nonce);
+        // console.log("nonce:",nonce);
         const from = owner.address.toString();
         contractAddress = ethers.getCreateAddress({from,nonce});
 
-        console.log("PreCalcu LockingContract:",contractAddress);
+        // console.log("PreCalcu LockingContract:",contractAddress);
  
 
       
@@ -56,7 +56,7 @@ describe("LockingContract contract test", function () {
     })
 
     it('should contract constuct success', async function () {
-        console.log(await utils.getLatestBlockNumber());
+        // console.log(await utils.getLatestBlockNumber());
 
         lockingContract = await LockingContract.deploy(
             [
@@ -87,9 +87,9 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
 
-        console.log(await utils.getLatestBlockNumber());
+        // console.log(await utils.getLatestBlockNumber());
         //await network.provider.send("evm_setAutomine", [true]);
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         // failed to with 0
 
         expect(await lockingContract.periodTime()).to.be.eq(periodTime);
@@ -236,7 +236,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         await expect(lockingContract.getVestingAmount(account5.address)).to.be.revertedWith("No active vesting schedule found");
         await expect(lockingContract.connect(account5).changeBeneficiary(account4.address)).to.be.revertedWith("No active vesting schedule found");
     })
@@ -270,7 +270,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         expect(await lockingContract.getVestingAmount(account1.address)).to.be.eq(0);
         await expect(lockingContract.connect(account1).changeBeneficiary(account2.address)).to.be.revertedWith("NewBeneficiary is Active");
     })
@@ -303,7 +303,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         expect(await lockingContract.getVestingAmount(account1.address)).to.be.eq(0);
         await expect(lockingContract.connect(account1).changeBeneficiary(ZeroAddress)).to.be.revertedWith("NewBeneficiary should not be address 0");
     })
@@ -337,7 +337,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime * 13])
         await utils.mineEmptyBlock();
@@ -382,7 +382,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
@@ -419,7 +419,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
@@ -456,7 +456,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
@@ -493,7 +493,7 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime * 12])
         await utils.mineEmptyBlock();
@@ -530,9 +530,9 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        console.log(await brc.balanceOf(lockingContract.target));
+        // console.log(await brc.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 13])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
@@ -572,9 +572,9 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        console.log(await brc.balanceOf(lockingContract.target));
+        // console.log(await brc.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 42])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
@@ -615,9 +615,9 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         // await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        console.log(await brc.balanceOf(lockingContract.target));
+        // console.log(await brc.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 43])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
@@ -658,10 +658,10 @@ describe("LockingContract contract test", function () {
             periodTime,
             LockingToken
         );
-        console.log("LockingContract:: ",lockingContract.target);
+        // console.log("LockingContract:: ",lockingContract.target);
         // await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        console.log(await brc.balanceOf(contractAddress));
-        console.log(await brc.balanceOf(lockingContract.target));
+        // console.log(await brc.balanceOf(contractAddress));
+        // console.log(await brc.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 43])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),

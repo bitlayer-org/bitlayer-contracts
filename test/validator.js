@@ -55,9 +55,9 @@ describe("Validator test", function () {
 
     it('should check invalid parameter at deploy', async () => {
         await expect(factory.deploy(vaddr, vaddr, 101, initStake, true, State.Ready)).to.be.reverted;
-        console.log("1")
+        // console.log("1")
         let stake = utils.ethToWei(params.OverMaxStakes);
-        console.log("1")
+        // console.log("1")
         await expect(factory.deploy(vaddr, vaddr, commissionRate, stake, true, State.Ready)).to.be.reverted;
     });
 
@@ -94,18 +94,18 @@ describe("Validator test", function () {
         expect(await validator.selfStake()).eq(currTotalStake);
         expect(await validator.getSelfDebt()).eq(0);
         const  amount = await validator.anyClaimable(adminAddr);
-        console.log(amount[0],amount[1]);
+        // console.log(amount[0],amount[1]);
 
     });
 
     it('2. should correct for validatorClaimAny', async () => {
         totalStake = await validator.totalStake();
-        console.log(totalStake);
+        // console.log(totalStake);
         
         await validator.receiveFee({value:utils.ethToWei(params.fees)});
 
         const  amount = await validator.anyClaimable(adminAddr);
-        console.log(amount[0],amount[1]);
+        // console.log(amount[0],amount[1]);
 
         expect(await validator.validatorClaimAny(adminAddr)).to
         .emit(validator, "RewardsWithdrawn")
@@ -116,31 +116,31 @@ describe("Validator test", function () {
         let delta = utils.ethToWei((3 * params.MinSelfStakes).toString());
         let delegator = signers[3].address;
         totalStake = await validator.totalStake();
-        console.log(totalStake);
+        // console.log(totalStake);
         await expect(validator.addDelegation(delta, delegator)).to
             .emit(validator, "StakesChanged")
             .withArgs(vaddr, delegator, currTotalStake + delta);
         await validator.receiveFee({value:utils.ethToWei(params.fees)});
 
         totalStake1 = await validator.totalStake();
-        console.log(totalStake1);
+        // console.log(totalStake1);
         const  amount = await validator.anyClaimable(adminAddr);
-        console.log(amount[0],amount[1]);
+        // console.log(amount[0],amount[1]);
         const  amount1 = await validator.anyClaimable(delegator);
-        console.log(amount1[0],amount1[1]);
+        // console.log(amount1[0],amount1[1]);
         expect(amount[1] + amount1[1]).to.be.eq(utils.ethToWei(params.fees))
     });
 
     it('4. should correct for delegatorClaimAny', async () => {
         totalStake = await validator.totalStake();
-        console.log(totalStake);
+        // console.log(totalStake);
 
         let delegatorRewards = utils.ethToWei(params.ThresholdStakes);
         let delegator = signers[3].address;
         await validator.receiveFee({value:delegatorRewards});
-        console.log(await validator.delegators(delegator));
+        // console.log(await validator.delegators(delegator));
         const  amount = await validator.anyClaimable(delegator);
-        console.log(amount[0],amount[1]);
+        // console.log(amount[0],amount[1]);
 
         await expect(validator.delegatorClaimAny(delegator)).to
             .emit(validator, "RewardsWithdrawn")
@@ -193,17 +193,17 @@ describe("Validator independent test", function () {
         // MinSelfStakes
 
         expect(await validator.totalStake()).eq(currTotalStake);
-        console.log(await validator.totalStake());
+        // console.log(await validator.totalStake());
 
         let selfStakeWei = await validator.selfStake();
-        console.log(selfStakeWei);
+        // console.log(selfStakeWei);
 
         expect(selfStakeWei).eq(stake);
         let currTotalRewards = currTotalStake 
        
 
         const accRewardsPerStake = currTotalRewards / currTotalStake;
-        console.log(accRewardsPerStake);
+        // console.log(accRewardsPerStake);
 
         if (currTotalStake >= utils.ethToWei(params.ThresholdStakes) && selfStakeWei >= utils.ethToWei(params.MinSelfStakes)) {
             expect(await validator.state()).eq(State.Ready);
@@ -232,14 +232,14 @@ describe("Validator independent test", function () {
         await validator.receiveFee({value:currTotalRewards1});
 
         let selfStake = await validator.selfStake();
-        console.log(selfStake);
+        // console.log(selfStake);
 
         expect(await validator.testGetClaimableUnbound(vaddr)).eq(delta);
         const account1 = await validator.anyClaimable(delegator)
         expect(account1[1]).eq(delegatorExpectRewards);
 
         const rewards = await validator.anyClaimable(adminAddr);
-        console.log(rewards[0],rewards[1]);
+        // console.log(rewards[0],rewards[1]);
         expect(rewards[1]).eq(currTotalRewards1 - delegatorExpectRewards);
 
         await expect(validator.validatorClaimAny(adminAddr)).to
@@ -268,17 +268,17 @@ describe("Validator independent test", function () {
         // MinSelfStakes
 
         expect(await validator.totalStake()).eq(currTotalStake);
-        console.log(await validator.totalStake());
+        // console.log(await validator.totalStake());
 
         let selfStakeWei = await validator.selfStake();
-        console.log(selfStakeWei);
+        // console.log(selfStakeWei);
 
         expect(selfStakeWei).eq(stake);
         let currTotalRewards = currTotalStake 
        
 
         const accRewardsPerStake = currTotalRewards / currTotalStake;
-        console.log(accRewardsPerStake);
+        // console.log(accRewardsPerStake);
 
         if (currTotalStake >= utils.ethToWei(params.ThresholdStakes) && selfStakeWei >= utils.ethToWei(params.MinSelfStakes)) {
             expect(await validator.state()).eq(State.Ready);
@@ -302,7 +302,7 @@ describe("Validator independent test", function () {
         await validator.receiveFee({value:currTotalRewards1});
 
         let selfStake = await validator.selfStake();
-        console.log(selfStake);
+        // console.log(selfStake);
 
         expect(await validator.testGetClaimableUnbound(vaddr)).eq(0);
         const account1 = await validator.anyClaimable(delegator)
@@ -390,7 +390,7 @@ describe("Validator independent test", function () {
 
         const newDlg0 = await validator.delegators(delegator);
         
-        console.log(newDlg0);
+        // console.log(newDlg0);
 
         await expect(validator.subDelegation(delta, delegator, false)).to
             .emit(validator, "StakesChanged")
@@ -399,7 +399,7 @@ describe("Validator independent test", function () {
         expect(await validator.testGetClaimableUnbound(delegator)).eq(0);
        const newDlg = await validator.delegators(delegator);
         
-        console.log(newDlg);
+        // console.log(newDlg);
 
         // currently ,the delegator should has 1/4 of settledRewards;
         // and it can't share the later rewards
@@ -457,9 +457,9 @@ describe("Validator independent test", function () {
         
 
         let dlg = await validator.delegators(delegator);
-        console.log(dlg);
+        // console.log(dlg);
         let oldStake = dlg.stake;
-        console.log(oldStake)
+        // console.log(oldStake)
         await expect(validator.delegatorClaimAny(delegator)).to
             .emit(validator, "RewardsWithdrawn")
             .withArgs(vaddr, delegator, oldStake);
@@ -484,7 +484,7 @@ describe("Validator independent test", function () {
         await validator.receiveFee({value:sendRewards});
         const newDlg0 = await validator.delegators(delegator);
         
-        console.log(newDlg0);
+        // console.log(newDlg0);
 
         await expect(validator.exitDelegation(delegator)).to
             .emit(validator, "StakesChanged")
@@ -495,7 +495,7 @@ describe("Validator independent test", function () {
 
   
         let newDlg = await validator.delegators(delegator);
-        console.log(newDlg)
+        // console.log(newDlg)
 
         expect(newDlg.settled).eq(oldStake * accRewardsPerStake * E18);
         expect(newDlg.stake).eq(0);

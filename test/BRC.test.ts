@@ -49,9 +49,9 @@ describe("BRC test", function(){
 
     it("construct balance is correct",async function(){
         const brc = await BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18)]);
-        console.log(brc.target);
+        // console.log(brc.target);
         const bao = await brc.balanceOf(account4.address);
-        console.log(bao.toString())
+        // console.log(bao.toString())
         expect(await brc.balanceOf(owner.address)).to.equal(ethers.parseUnits("200000000",18).toString());
     })
     it("BRC token details is correct",async function(){
@@ -68,16 +68,16 @@ describe("BRC test", function(){
 
     it("tranfer if correct",async function(){
         const brc = await BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18)]);
-        console.log(brc.target);
+        // console.log(brc.target);
         const bao = await brc.balanceOf(account4.address);
-        console.log(bao.toString())
+        // console.log(bao.toString())
         await brc.transfer(account4.address,ethers.parseUnits("100000000",18));
         expect(await brc.balanceOf(account4.address)).to.equal(ethers.parseUnits("300000000",18).toString());
         expect(await brc.balanceOf(owner.address)).to.equal(ethers.parseUnits("100000000",18).toString());
     })
     it("tranferFrom if correct",async function(){
         const brc = await BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18)]);
-        console.log(brc.target);
+        // console.log(brc.target);
         await brc.connect(account4).approve(owner.address,ethers.parseUnits("200000000",18));
 
 
@@ -89,11 +89,11 @@ describe("BRC test", function(){
     })
     it('permit test',async function(){
         const brc = await BRC.deploy([owner,account1,account2,account3,account4],[ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18),ethers.parseUnits("200000000",18)]);
-        
+
         var nonce = await brc.nonces(owner.address);
         expect(nonce).to.be.equal(0);
         var domainSeparator = await brc.DOMAIN_SEPARATOR();
-        console.log(domainSeparator.toString());
+        // console.log(domainSeparator.toString());
      
         const deadline = await utils.getLatestTimestamp();
         const value = 100;
