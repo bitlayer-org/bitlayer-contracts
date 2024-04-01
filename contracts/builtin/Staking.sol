@@ -37,9 +37,9 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     uint256 public constant BackupValidatorFeePercent = 24; // 80% * 30%
     uint256 public constant ActiveValidatorFeePercent = 56; // 80% * 70%
 
-    // BRC token address.
+    // BTR token address.
     // Note: The decimals MUST BE 18, this Staking contract just take it 18 without validation.
-    IERC20 public brcToken;
+    IERC20 public btrToken;
 
     bool public isOpened; // true means any one can register to be a validator without permission. default: false
 
@@ -115,14 +115,14 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     // initialize the staking contract, mainly for the convenient purpose to init different chains
     function initialize(
         address _admin,
-        address _brcAddress,
+        address _btrAddress,
         uint256 _epoch,
         address payable _foundationPool
-    ) external initializer onlyValidAddress(_admin) onlyValidAddress(_brcAddress) {
+    ) external initializer onlyValidAddress(_admin) onlyValidAddress(_btrAddress) {
         require(_epoch > 0, "E10");
-        require(_admin != address(0) && _brcAddress != address(0) && _foundationPool != address(0),"args should not be address 0");
+        require(_admin != address(0) && _btrAddress != address(0) && _foundationPool != address(0),"args should not be address 0");
         admin = _admin;
-        brcToken = IERC20(_brcAddress);
+        btrToken = IERC20(_btrAddress);
         blockEpoch = _epoch;
         foundationPool = _foundationPool;
     }
@@ -432,11 +432,11 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
     function takeStakedToken(address _tokenOwner, uint256 _amount) internal {
         if (_amount > 0) {
             mustConvertStake(_amount);
-            uint currAllowance = brcToken.allowance(_tokenOwner, address(this));
-            uint balance = brcToken.balanceOf(_tokenOwner);
+            uint currAllowance = btrToken.allowance(_tokenOwner, address(this));
+            uint balance = btrToken.balanceOf(_tokenOwner);
             require(currAllowance >= _amount, "E43"); //not enough allowance
             require(balance >= _amount, "E44"); //not enough balance
-            SafeERC20.safeTransferFrom(brcToken, _tokenOwner, address(this), _amount);
+            SafeERC20.safeTransferFrom(btrToken, _tokenOwner, address(this), _amount);
         }
     }
 
@@ -594,7 +594,7 @@ contract Staking is Initializable, Params, SafeSend, WithAdmin, ReentrancyGuard 
             }
         }
         if (releaseAmount > 0) {
-            SafeERC20.safeTransfer(brcToken, msg.sender, releaseAmount);
+            SafeERC20.safeTransfer(btrToken, msg.sender, releaseAmount);
             emit StakeWithdrawn(_val, msg.sender, releaseAmount);
         } else {
             emit ClaimWithoutUnboundStake(_val);

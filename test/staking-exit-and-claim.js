@@ -62,20 +62,20 @@ describe("Staking Test", function () {
         [owner,user1,user2,user3, ...users] = await ethers.getSigners();
         valFactory = await ethers.getContractFactory("cache/solpp-generated-contracts/builtin/Validator.sol:Validator");
         // address _admin,
-        // address _brcAddress,
+        // address _btrAddress,
         // uint256 _epoch,
         // address payable _foundationPool
         // console.log("Staking: ",instance.target);
-        BRC = await hre.ethers.getContractFactory("BRC");
-        brc = await BRC.deploy(
+        BTR = await hre.ethers.getContractFactory("BTR");
+        btr = await BTR.deploy(
             [user3.address],
             [ethers.parseUnits("1000000000",18)]
         );
-        // console.log("BRC: ",brc.target);
+        // console.log("BTR: ",btr.target);
 
         let args = [
             owner.address,
-            brc.target,
+            btr.target,
             params.epoch,
             user3.address
         ]
@@ -116,13 +116,13 @@ describe("Staking Test", function () {
             // let period = params.releaseCount * params.releasePeriod
             // await ethers.provider.send("evm_mine",[basicLockEnd + period])
 
-            let bal_init = await brc.balanceOf(validator.target);
+            let bal_init = await btr.balanceOf(validator.target);
             expect(bal_init).to.be.equal(0);
 
-            await brc.connect(user3).transfer(user1.address, value * BigInt(2));
-            expect(await brc.balanceOf(user1.address)).to.be.eq(value * BigInt(2));
-            await brc.connect(user3).approve(instance.target,value * BigInt(2000000))
-            await brc.connect(user1).approve(instance.target,value * BigInt(2000000))
+            await btr.connect(user3).transfer(user1.address, value * BigInt(2));
+            expect(await btr.balanceOf(user1.address)).to.be.eq(value * BigInt(2));
+            await btr.connect(user3).approve(instance.target,value * BigInt(2000000))
+            await btr.connect(user1).approve(instance.target,value * BigInt(2000000))
 
             // add stake 
             await instance.connect(user1).addStake(users[0].address,value * BigInt(2));
@@ -138,7 +138,7 @@ describe("Staking Test", function () {
             //claim
  
             await instance.connect(user1).validatorClaimAny(users[0].address);
-            expect(await brc.balanceOf(validator.target)).to.be.equal(0);
+            expect(await btr.balanceOf(validator.target)).to.be.equal(0);
         });
  
 
@@ -147,12 +147,12 @@ describe("Staking Test", function () {
             let validator = valFactory.attach(valContractAddr);
             // update block
 
-            await brc.connect(user3).transfer(user1.address, value * BigInt(2));
-            expect(await brc.balanceOf(user1.address)).to.be.eq(value * BigInt(2));
-            await brc.connect(user3).transfer(owner.address, value * BigInt(2));
-            await brc.connect(user3).approve(instance.target,value * BigInt(2000000))
-            await brc.connect(user1).approve(instance.target,value * BigInt(2000000))
-            await brc.connect(owner).approve(instance.target,value * BigInt(2000000))
+            await btr.connect(user3).transfer(user1.address, value * BigInt(2));
+            expect(await btr.balanceOf(user1.address)).to.be.eq(value * BigInt(2));
+            await btr.connect(user3).transfer(owner.address, value * BigInt(2));
+            await btr.connect(user3).approve(instance.target,value * BigInt(2000000))
+            await btr.connect(user1).approve(instance.target,value * BigInt(2000000))
+            await btr.connect(owner).approve(instance.target,value * BigInt(2000000))
 
 
             // add stake 

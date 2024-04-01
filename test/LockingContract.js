@@ -21,8 +21,8 @@ describe("LockingContract contract test", function () {
     let account5;
 
     let periodTime = 50;
-    let BRC;
-    let brc;
+    let BTR;
+    let btr;
     let cliffPeriods = 12;
     let vestingPeriods = 30;
     let LockingContract;
@@ -32,14 +32,14 @@ describe("LockingContract contract test", function () {
     beforeEach(async function () {
 
         [owner, account1, account2, account3, account4, account5] = await hre.ethers.getSigners();
-        BRC = await hre.ethers.getContractFactory("BRC");
-        brc = await BRC.deploy(
+        BTR = await hre.ethers.getContractFactory("BTR");
+        btr = await BTR.deploy(
             [account5.address],
             [ethers.parseUnits("1000000000",18)]
         );
-        // console.log("BRC: ",brc.target);
+        // console.log("BTR: ",btr.target);
 
-        LockingToken = brc.target;
+        LockingToken = btr.target;
 
         LockingContract = await hre.ethers.getContractFactory("LockingContract")
         const nonce = await owner.getNonce();
@@ -51,8 +51,8 @@ describe("LockingContract contract test", function () {
  
 
       
-        await brc.connect(account5).transfer(contractAddress, utils.ethToWei('1200000'));
-        // await brc.transfer(lockingContract.target, utils.ethToWei('40000000'))
+        await btr.connect(account5).transfer(contractAddress, utils.ethToWei('1200000'));
+        // await btr.transfer(lockingContract.target, utils.ethToWei('40000000'))
     })
 
     it('should contract constuct success', async function () {
@@ -112,7 +112,7 @@ describe("LockingContract contract test", function () {
         const timestamp = await lockingContract.startTimestamp();
         console.log("tmp:",timestamp);
 
-        //expect(await lockingContract.totalLockingAmountSum()).to.be.eq(await brc.balanceOf(lockingContract.target));
+        //expect(await lockingContract.totalLockingAmountSum()).to.be.eq(await btr.balanceOf(lockingContract.target));
         //console.log(await lockingContract.totalLockingAmountSum());
     });
     it('should contract constuct fail when totalLockingAmount less than balanceOf contract', async function () {
@@ -338,7 +338,7 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime * 13])
         await utils.mineEmptyBlock();
         await lockingContract.connect(account1).changeBeneficiary(account4.address);
@@ -347,9 +347,9 @@ describe("LockingContract contract test", function () {
         await expect(lockingContract.connect(account1).claim()).to.be.revertedWith("No active vesting schedule found");
 
         expect(await lockingContract.getVestingAmount(account4.address)).to.be.eq(utils.ethToWei('10000'));
-        expect(await brc.balanceOf(account4.address)).to.be.eq(0);
+        expect(await btr.balanceOf(account4.address)).to.be.eq(0);
         await lockingContract.connect(account4).claim()
-        expect(await brc.balanceOf(account4.address)).to.be.eq(utils.ethToWei('10000'));
+        expect(await btr.balanceOf(account4.address)).to.be.eq(utils.ethToWei('10000'));
     })
     // --------------------- Claim  ----------------------
 
@@ -383,7 +383,7 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(0);
@@ -420,7 +420,7 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
         await expect(lockingContract.getVestingAmount(account5.address)).to.be.revertedWith("No active vesting schedule found");
@@ -457,7 +457,7 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime])
         await utils.mineEmptyBlock();
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(0);
@@ -494,7 +494,7 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
         await hre.network.provider.send('evm_increaseTime', [periodTime * 12])
         await utils.mineEmptyBlock();
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(0);
@@ -531,15 +531,15 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        // console.log(await brc.balanceOf(lockingContract.target));
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        // console.log(await btr.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 13])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
         expect(await lockingContract.getVestingAmount(owner.address)).to.be.eq(utils.ethToWei('10000'));
-        expect(await brc.balanceOf(account2.address)).to.be.eq(0);
+        expect(await btr.balanceOf(account2.address)).to.be.eq(0);
         await lockingContract.connect(account2).claim()
-        expect(await brc.balanceOf(account2.address)).to.be.eq(utils.ethToWei('10000'));
+        expect(await btr.balanceOf(account2.address)).to.be.eq(utils.ethToWei('10000'));
         await expect(lockingContract.connect(account2).claim()).to.be.revertedWith("No tokens available for release");
     })
 
@@ -573,15 +573,15 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        //await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        // console.log(await brc.balanceOf(lockingContract.target));
+        //await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        // console.log(await btr.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 42])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
         expect(await lockingContract.getVestingAmount(account2.address)).to.be.eq(utils.ethToWei('300000'));
-        const beforeAmount = await brc.balanceOf(account2.address);
+        const beforeAmount = await btr.balanceOf(account2.address);
         await lockingContract.connect(account2).claim()
-        const afterAmount = await brc.balanceOf(account2.address);
+        const afterAmount = await btr.balanceOf(account2.address);
         expect(afterAmount - beforeAmount).to.be.eq(utils.ethToWei('300000'));
         await expect(lockingContract.connect(account2).claim()).to.be.revertedWith("No tokens available for release");
     })
@@ -616,15 +616,15 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        // await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        // console.log(await brc.balanceOf(lockingContract.target));
+        // await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        // console.log(await btr.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 43])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
         expect(await lockingContract.getVestingAmount(account2.address)).to.be.eq(utils.ethToWei('300000'));
-        const beforeAmount = await brc.balanceOf(account2.address);
+        const beforeAmount = await btr.balanceOf(account2.address);
         await lockingContract.connect(account2).claim()
-        const afterAmount = await brc.balanceOf(account2.address);
+        const afterAmount = await btr.balanceOf(account2.address);
         expect(afterAmount - beforeAmount).to.be.eq(utils.ethToWei('300000'));
         await expect(lockingContract.connect(account2).claim()).to.be.revertedWith("No tokens available for release");
     })
@@ -659,16 +659,16 @@ describe("LockingContract contract test", function () {
             LockingToken
         );
         // console.log("LockingContract:: ",lockingContract.target);
-        // await brc.transfer(lockingContract.target, utils.ethToWei('1200000'))
-        // console.log(await brc.balanceOf(contractAddress));
-        // console.log(await brc.balanceOf(lockingContract.target));
+        // await btr.transfer(lockingContract.target, utils.ethToWei('1200000'))
+        // console.log(await btr.balanceOf(contractAddress));
+        // console.log(await btr.balanceOf(lockingContract.target));
         await hre.network.provider.send('evm_increaseTime', [periodTime * 43])
         await utils.mineEmptyBlock();
         //utils.ethToWei('300000'),
         expect(await lockingContract.getVestingAmount(account2.address)).to.be.eq(utils.ethToWei('300000'));
-        const beforeAmount = await brc.balanceOf(account2.address);
+        const beforeAmount = await btr.balanceOf(account2.address);
         await lockingContract.connect(account2).claim()
-        const afterAmount = await brc.balanceOf(account2.address);
+        const afterAmount = await btr.balanceOf(account2.address);
         expect(afterAmount - beforeAmount).to.be.eq(utils.ethToWei('300000'));
         await expect(lockingContract.connect(account2).claim()).to.be.revertedWith("No tokens available for release");
     })
